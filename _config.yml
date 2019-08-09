@@ -81,4 +81,4 @@ deploy:
   type: git
   repo: git@github.com:junxxx/junxxx.github.io.git
   branch: gh-pages
-  message: "Site updated: {{ now('YYYY-MM-DD HH:mm:ss') }}
+  message: "Site updated: {{ now('YYYY-MM-DD HH:mm:ss') }}"
