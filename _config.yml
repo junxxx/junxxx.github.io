@@ -79,6 +79,6 @@ theme: maupassant
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repo: git@github.com:junxxx/junxxx.github.io.git
-  branch: master
+  repo: 
+  branch: 
   message: "Site updated: {{ now('YYYY-MM-DD HH:mm:ss') }}"
