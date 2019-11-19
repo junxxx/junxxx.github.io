@@ -2,16 +2,13 @@
 <h1 id="zip的基础用法："><a href="#zip的基础用法：" class="headerlink" title="zip的基础用法："></a>zip的基础用法：</h1><p><code>zip options archive inpath inpath ...</code> </p>
 <p>其中archive是新建的或是已经存在的压缩文件。</p>
 <p>options：</p>
-<blockquote>
 <ul>
 <li>-b path 将压缩的文件放入指定的目录</li>
 <li>-e encrypt 加密</li>
 <li>-i include files 只压缩指定的文件</li>
 </ul>
-</blockquote>
 <h1 id="tar的基础用法："><a href="#tar的基础用法：" class="headerlink" title="tar的基础用法："></a>tar的基础用法：</h1><p><code>tar [option...] [file]...</code></p>
 <p>options:</p>
-<blockquote>
 <ul>
 <li>-c create 新建压缩文件</li>
 <li>-C 解压到指定目录</li>
@@ -23,21 +20,12 @@
 <li>-z gzip</li>
 <li>-v gzip</li>
 </ul>
-</blockquote>
 <p>现在需要将ABC文件夹打包，并且忽略其中的ef文件夹。试了命令<code>zip -r target.zip ABC -x path/to/ef</code>,结果在压缩的时候，还是将ef文件夹压缩进去了。后面的文件夹路径不管是相对还是绝对路径都不管用。无奈之下，用tar命令<code>tar -zcvf target.tar.gz --exclude=ef ABC</code>搞定。</p>
 <h2 id="同步-rsync"><a href="#同步-rsync" class="headerlink" title="同步:rsync"></a>同步:rsync</h2><p>Linux下非常好用的一个传输(同步)文件的命令。在首次用rsync命令传输过文件之后，再次用这个命令传输文件的时候，只会同步改变过的文件。</p>
-<h1 id="基础用法："><a href="#基础用法：" class="headerlink" title="基础用法："></a>基础用法：</h1><blockquote>
-<p>Local  <code>rsync [OPTION...] SRC... [DEST]</code></p>
-</blockquote>
-<blockquote>
-<p>Access via remote shell：</p>
-</blockquote>
-<blockquote>
-<p>Pull <code>rsync [OPTION...] [USER@]HOST:SRC... [DEST]</code></p>
-</blockquote>
-<blockquote>
-<p>PUSH <code>rsync [OPTION...] SRC... [USER@]HOST:DEST</code></p>
-</blockquote>
+<h1 id="基础用法："><a href="#基础用法：" class="headerlink" title="基础用法："></a>基础用法：</h1><p> Local  <code>rsync [OPTION...] SRC... [DEST]</code></p>
+<p> Access via remote shell：</p>
+<p> Pull <code>rsync [OPTION...] [USER@]HOST:SRC... [DEST]</code></p>
+<p> Push <code>rsync [OPTION...] SRC... [USER@]HOST:DEST</code></p>
 <p>将nginx加入PATH。编辑用户目录下的.bash_profile文件，在PATH的下一行加入<code>PATH=PATH:/path/to/nginx/sbin/nginx</code>。然后<code>source .bash_profile</code>。</p>
 <p>挂载硬盘。</p>
 <p><code>fdisk -l</code>查看当前计算机上的硬盘。<br><code>mount /dev/sdb1  /path/</code>将硬盘sdb1挂载到/path目录。<br><code>df -h</code>查看当前计算机硬盘的挂载情况。</p>
