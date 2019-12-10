@@ -281,6 +281,25 @@ div {
         word-break: normal; }
         .post .post-content ul a:hover, .post .post-content ol a:hover {
           text-decoration: underline; }
+    .post .post-content .tagcloud {
+      margin: 0 0 30px 0; }
+      .post .post-content .tagcloud a {
+        padding: 0px 5px;
+        margin: 3px;
+        display: inline-block;
+        border: 1px solid #808080;
+        border-radius: 999em;
+        color: #aaa; }
+        .post .post-content .tagcloud a:hover {
+          color: #fff;
+          border: 1px solid #808080;
+          background: #808080; }
+    .post .post-content .one-tag-list {
+      margin: 30px 0; }
+      .post .post-content .one-tag-list .tag-name .tag-text {
+        margin-left: 5px;
+        font-size: 16px;
+        font-weight: bold; }
   .post .tags {
     padding-bottom: 1em; }
     .post .tags a {
