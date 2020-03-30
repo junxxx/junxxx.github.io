@@ -1,0 +1,1 @@
+git checkout source && hexo g && cp -r public /tmp && git checkout master && cp -r /tmp/public/* .
