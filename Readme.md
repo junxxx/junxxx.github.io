@@ -10,5 +10,7 @@ brew install hugo
 
 ## Run on local
 ```
+git submodule update --init --recursive
+git pull --recurse-submodules
 hugo server -D
 ```
