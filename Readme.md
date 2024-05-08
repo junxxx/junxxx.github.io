@@ -1,6 +1,6 @@
 A blog servered by [hugo](https://gohugo.io/)
 
-## Install
+## Install hugo with extend
 ```
 // debian or ubuntu
 sudo apt-get install hugo
