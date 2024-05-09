@@ -1,6 +1,9 @@
 ---
 title: "Install Snap on Centos7"
 date: 2022-05-15T21:48:33+08:00
+categories: ["Tech"]
+tags: ["log"]
+author: "Paisen"
 ---
 ## 问题
 在Centos7系统上安装`snap`，遇到的问题记录

@@ -13,4 +13,6 @@ brew install hugo
 git submodule update --init --recursive
 git pull --recurse-submodules
 hugo server -D
+// or
+sh server.sh
 ```

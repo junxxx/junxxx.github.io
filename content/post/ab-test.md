@@ -1,6 +1,9 @@
 ---
-title: "Ab Test"
+title: "A tool for test server"
 date: 2018-11-19T21:49:05+08:00
+categories: ["Tech", "Tools"]
+tags: ["test"]
+author: "Paisen"
 ---
 让我们来对服务器做一下压力测试吧！  
 本篇文章讲一下压力测试应该怎么做，压力测试过程中需要注意哪些指标，以及需要注意的事项。  

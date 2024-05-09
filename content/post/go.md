@@ -1,6 +1,9 @@
 ---
-title: "Go串讲文档"
+title: "A lecture of Go"
 date: 2022-05-29T15:27:24+08:00
+categories: ["CS", "Programming language"]
+tags: ["Golang"]
+author: "Paisen"
 ---
 ## 概述
 串讲，是以会议形式，串讲人给同事讲一个topic。会上的其他同事，对串讲人进行相关知识的提问，以考查其对此topic的掌握程度。便于尽快上手，投入工作。
