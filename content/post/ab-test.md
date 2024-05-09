@@ -1,5 +1,5 @@
 ---
-title: "A tool for test server"
+title: "A tool for testing server"
 date: 2018-11-19T21:49:05+08:00
 categories: ["Tech", "Tools"]
 tags: ["test"]

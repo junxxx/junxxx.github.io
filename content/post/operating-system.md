@@ -1,7 +1,6 @@
 ---
 title: "Operating System"
 date: 2024-05-09T10:46:18+08:00
-draft: false
 categories: ["Tech", "CS"]
 tags: ["OS"]
 author: "Paisen"
