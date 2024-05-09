@@ -16,3 +16,7 @@ hugo server -D
 // or
 sh server.sh
 ```
+
+ [ ] Enable comment [gitalk](https://github.com/gitalk/gitalk).
+ 
+ [ ] Deploy website on Cloudflare pages.
