@@ -1,6 +1,6 @@
 ---
 title: "System Design"
-date: 2024-05-09T09:48:51+08:00
+date: 2022-07-06T09:48:51+08:00
 draft: true
 categories: ["Tech", "CS"]
 tags: ["System design"]
@@ -27,5 +27,14 @@ Technical concepts
 ### RESTful
 ### RPC
 
+## SQL vs NoSQL
+
+## Scaling
+
+## Cache
+
+## Indexing
+
+## Replication
 
 ## Consistent hashing

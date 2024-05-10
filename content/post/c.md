@@ -1,6 +1,6 @@
 ---
 title: "C Programming Language"
-date: 2024-05-09T10:47:40+08:00
+date: 2018-04-05T10:47:40+08:00
 draft: false
 categories: ["CS", "Programming Language"]
 tags: ["C"]
