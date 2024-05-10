@@ -8,7 +8,7 @@ author: "Paisen"
 ---
 **The C Programming Language** is the best textbook for a beginner who wants to learn C. This article mostly talks about pointers and memory in C.
 
-C's syntax is much simple but handle pointer in C is too easy to get stuck.
+C's syntax is simple but handling pointers in C is too easy to get stuck.
 
 ## Primitive data types and sizes
 char, int, float, double
@@ -24,7 +24,7 @@ printf("%u\n", sizeof(float));
 ```
 
 ## Array
-Array is a continous fixed length address. Different data type has different size. `sizeof` return the size(how many bytes it holds to represent a data) of a data.
+Array is a continuous fixed-length address. Different data types have different sizes. `sizeof` returns the size(how many bytes it holds to represent a data) of a data.
 ```C
 // declare an array
 type var[length];
@@ -39,12 +39,17 @@ breads[5] = 10; // overflow
 ```
 
 ### String
-String in C is actually an array of `char` type, teminated with `'\0'` charactor, which equals to 0. So you will see this code often.
+A string in C is actually an array of `char` type, teminated with the `'\0'` charactor, which equals to 0. So you will see this code often.
 ```C
 char name[10] = {'P', 'a', 'i', 'S', 'e', 'n', '\0'};
 //or
 char *name = "PaiSen";
 printf("name: %s\n", name);
+char *p = name;
+while(*p) {
+    printf("%c\n", *p);
+    p++;
+}
 ```
 What's the difference between `char name[10]` and `char *name`?
 
@@ -54,11 +59,11 @@ char *argv[] = {"ls", "/home/user", "-la"};
 ```
 
 ## Pointer
-A pointer is a variable contains the address in memory.
+A pointer is a variable contains another variable's address in memory.
 
-Technically speaking, memory is a large lenght array of continous bytes. A 32 bit machine can maximum 2^32=4294967296 bytes, which is 4GB.
+Technically speaking, memory is a large lenght array of continuous bytes. A 32-bit machine can maximumly have 2^32=4294967296 bytes, which is 4GB.
 
-Pointer is a variable, so it has type. `&` is used to get the address of a variable. `*` is used to get the content in a pointer. `void *` is a special pointer, which can point to any type.
+A pointer is a variable, so it has a type. `&` is used to get the address of a variable. `*` is used to get the content in a pointer. `void *` is a special pointer, which can point to any type.
 
 `NULL` pointer in C is defined as `(void *) 0`.
 
@@ -84,10 +89,10 @@ A name of an array is actually the address of that data.
 char name[MAX_LEN] = {'H','E','L', 'L', 'O', 0};
 printf("%p, %p, %c, %c\n", name, &name[0], *(name+1), name[1]);
 ```
-`name+1` is the address of the second element if array `name`, so if a pointer `p` point to the location of `name`, `p+1` then point to the next address in memory.
+`name+1` is the address of the second element in array `name`, so if a pointer `p` points to the location of `name`, `p+1` then points to the next address in memory.
 
 ### Dynamic array
-When you can't decide the lenght of an array at compile time, you can allocate dynamic memory in run-time.
+When you can't decide the lenght of an array at compile time, you can allocate dynamic memory at runtime.
 ```C
 int n;
 scanf("%d", &n);
