@@ -6,11 +6,11 @@ categories: ["Tech", "Life", "Thought"]
 tags: [""]
 author: "Paisen"
 ---
-[Hugo](https://gohugo.io/) is a framework witten with Golang for building website.
+[Hugo](https://gohugo.io/) is a framework written with Golang for building website.
 
-I told my wife I wrote something on blog. After heard that, she said she wants to build a blog and start writing. So I spent a few hours on setting up the a local hugo site and deployed it on Github pages.
+I told my wife I wrote something on my blog. After heard that, she said she wants to build a blog and start writing. So I spent a few hours on setting up a local hugo site and deployed it on Github pages.
 
-Here are all the thing you need:
+Here are all the thing you need to do:
 - A [github](https://github.com/) account, if you didn't have one, you need to sign up
 - [Git](https://git-scm.com/) installed on your local machine
 - [Install hugo](https://gohugo.io/installation/)
