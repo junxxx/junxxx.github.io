@@ -16,14 +16,17 @@ Use symbol `|` to create a pipeline, which a powerful skill in Unix.
 // count the numbers of text file in current directory.
 ls -la | grep *.txt | wc -l
 ```
+## Xargs
+Many programs, takes its arguments from the command line (`char *argv[]`) but ignores standard input `fd 0`. If you want to pipe the output of a program to input of another program that ignores standard input, like `rm`, you need to use `xargs`.
+
+xargs - build and execute command lines from standard input
+```
+ls | grep trash | rm            // this won't work, because rm ignores standard input
+ls | grep trash | xargs rm 
+```
 
 ## Top
 top - display Linux processes
-
-Summary Display
-- UPTIME and LOAD Averages
-- TASK and CPU States
-- MEMORY Usage
 
 ```
 top - 22:05:26 up 2 days,  2:48,  2 users,  load average: 0.00, 0.00, 0.00       
@@ -52,7 +55,7 @@ hi : time spent servicing hardware interrupts
 si : time spent servicing software interrupts
 st : time stolen from this vm by the hypervisor
 ```
-Use `man top` to check out infomation.
+Use `man top` to check out more infomation.
 
 ## Strace
 strace - trace system calls and signals
@@ -63,14 +66,19 @@ In the simplest case strace runs the specified command until it exits.  It inter
 nohup - run a command immune to hangups, with output to a non-tty
 
 ## Ps
+ps - report a snapshot of the current processes
 
 ## Grep
+grep, egrep, fgrep, rgrep - print lines that match patterns
 
 ## Awk
+mawk - pattern scanning and text processing language
 
 ## Sed
+sed - stream editor for filtering and transforming text
 
-Some task can be solved by using combination of a few shell.
+Some tasks can be solved by using combination of a few shell.
+
 1. 
 
 ## Reference
