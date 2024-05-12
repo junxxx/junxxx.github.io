@@ -15,7 +15,7 @@ Keep in mind, from a programmer's perspective, an OS is an implementation of har
 
 To be honest, the concepts in OS are easy to forget if you didn't have a deep understand of it. In order to learn OS well, you need to combine practice with theory. Like for a instance, it's better for you to write a couple of codes to build a small application than just reading a book.
 
-The goals in a multiple uer, time-share OS are multiplexing, isolation and interaction.
+The goals in a multiple user, time-share OS are multiplexing, isolation and interaction.
 
 Overall, the basic and the most important part in a OS are:
 - [**Process**]({{< ref "/process-implementation.md" >}})

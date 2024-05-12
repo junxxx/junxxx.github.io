@@ -71,6 +71,25 @@ ps - report a snapshot of the current processes
 ## Grep
 grep, egrep, fgrep, rgrep - print lines that match patterns
 
+## Netstat
+netstat - Print network connections, routing tables, interface statistics, masquerade connections, and multicast memberships
+
+By default, netstat displays a list of open sockets.  If you don't specify any address families, then the active  sockets  of  all configured address families will be printed.
+
+This program is mostly obsolete.  Replacement for netstat is ss.  Replacement for netstat -r is ip route.  Replacement for netstat -i is ip -s link.  Replacement for netstat -g is ip maddr.
+
+[--tcp|-t] [--udp|-u] [--listening|-l] [--all|-a] [--numberic|n]
+```
+// count how many ESTABLISHED TCP v4 sockets
+netstat -altu4 | grep tcp |grep -i established | wc -l
+```
+
+## Ss
+ss - another utility to investigate sockets
+
+## Proc
+proc - process information pseudo-filesystem
+
 ## Awk
 mawk - pattern scanning and text processing language
 
