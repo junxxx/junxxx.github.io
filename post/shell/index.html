@@ -5,11 +5,11 @@ Pipe Process read previous process&amp;rsquo;s output as its input and generate 
 Pipe Process read previous process’s output as its input and generate output to next process’s input. Use symbol | to create a pipeline, which a powerful skill in Unix.
 1 2 // count the numbers of text file in current directory. ls -la | grep *.txt | wc -l Xargs Many programs, takes its arguments from the command line (char *argv[]) but ignores standard input fd 0."><meta property="og:locale" content="en"><meta property="og:type" content="article"><meta property="article:section" content="post"><meta property="article:published_time" content="2018-05-18T10:46:56+08:00"><meta property="article:modified_time" content="2018-05-18T10:46:56+08:00"><meta property="article:tag" content="Shell"><meta itemprop=name content="Shell"><meta itemprop=description content="Learn a shell a day, master Unix one day!
 Pipe Process read previous process&rsquo;s output as its input and generate output to next process&rsquo;s input. Use symbol | to create a pipeline, which a powerful skill in Unix.
-1 2 // count the numbers of text file in current directory. ls -la | grep *.txt | wc -l Xargs Many programs, takes its arguments from the command line (char *argv[]) but ignores standard input fd 0."><meta itemprop=datePublished content="2018-05-18T10:46:56+08:00"><meta itemprop=dateModified content="2018-05-18T10:46:56+08:00"><meta itemprop=wordCount content="609"><meta itemprop=keywords content="Shell"><meta name=twitter:card content="summary"><meta name=twitter:title content="Shell"><meta name=twitter:description content="Learn a shell a day, master Unix one day!
+1 2 // count the numbers of text file in current directory. ls -la | grep *.txt | wc -l Xargs Many programs, takes its arguments from the command line (char *argv[]) but ignores standard input fd 0."><meta itemprop=datePublished content="2018-05-18T10:46:56+08:00"><meta itemprop=dateModified content="2018-05-18T10:46:56+08:00"><meta itemprop=wordCount content="777"><meta itemprop=keywords content="Shell"><meta name=twitter:card content="summary"><meta name=twitter:title content="Shell"><meta name=twitter:description content="Learn a shell a day, master Unix one day!
 Pipe Process read previous process&rsquo;s output as its input and generate output to next process&rsquo;s input. Use symbol | to create a pipeline, which a powerful skill in Unix.
 1 2 // count the numbers of text file in current directory. ls -la | grep *.txt | wc -l Xargs Many programs, takes its arguments from the command line (char *argv[]) but ignores standard input fd 0."><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script><script src=https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js></script><![endif]--></head><body><div id=mobile-navbar class=mobile-navbar><div class=mobile-header-logo><a href=/ class=logo>Paisen</a></div><div class=mobile-navbar-icon><span></span>
 <span></span>
-<span></span></div></div><nav id=mobile-menu class="mobile-menu slideout-menu"><ul class=mobile-menu-list><a href=/><li class=mobile-menu-item>Home</li></a><a href=/post/><li class=mobile-menu-item>Archives</li></a><a href=/tags/><li class=mobile-menu-item>Tags</li></a><a href=/categories/><li class=mobile-menu-item>Categories</li></a></ul></nav><div class=container id=mobile-panel><header id=header class=header><div class=logo-wrapper><a href=/ class=logo>Paisen</a></div><nav class=site-navbar><ul id=menu class=menu><li class=menu-item><a class=menu-item-link href=/>Home</a></li><li class=menu-item><a class=menu-item-link href=/post/>Archives</a></li><li class=menu-item><a class=menu-item-link href=/tags/>Tags</a></li><li class=menu-item><a class=menu-item-link href=/categories/>Categories</a></li></ul></nav></header><main id=main class=main><div class=content-wrapper><div id=content class=content><article class=post><header class=post-header><h1 class=post-title>Shell</h1><div class=post-meta><span class=post-time>2018-05-18</span><div class=post-category><a href=/categories/cs/>CS </a><a href=/categories/unix/>Unix</a></div></div></header><div class=post-toc id=post-toc><h2 class=post-toc-title>Contents</h2><div class="post-toc-content always-active"><nav id=TableOfContents><ul><li><ul><li><a href=#pipe>Pipe</a></li><li><a href=#xargs>Xargs</a></li><li><a href=#top>Top</a></li><li><a href=#strace>Strace</a></li><li><a href=#nohup>Nohup</a></li><li><a href=#ps>Ps</a></li><li><a href=#grep>Grep</a></li><li><a href=#netstat>Netstat</a></li><li><a href=#ss>Ss</a></li><li><a href=#proc>Proc</a></li><li><a href=#awk>Awk</a></li><li><a href=#sed>Sed</a></li><li><a href=#reference>Reference</a></li></ul></li></ul></nav></div></div><div class=post-content><p>Learn a shell a day, master Unix one day!</p><h2 id=pipe>Pipe</h2><p>Process read previous process&rsquo;s output as its input and generate output to next process&rsquo;s input.
+<span></span></div></div><nav id=mobile-menu class="mobile-menu slideout-menu"><ul class=mobile-menu-list><a href=/><li class=mobile-menu-item>Home</li></a><a href=/post/><li class=mobile-menu-item>Archives</li></a><a href=/tags/><li class=mobile-menu-item>Tags</li></a><a href=/categories/><li class=mobile-menu-item>Categories</li></a></ul></nav><div class=container id=mobile-panel><header id=header class=header><div class=logo-wrapper><a href=/ class=logo>Paisen</a></div><nav class=site-navbar><ul id=menu class=menu><li class=menu-item><a class=menu-item-link href=/>Home</a></li><li class=menu-item><a class=menu-item-link href=/post/>Archives</a></li><li class=menu-item><a class=menu-item-link href=/tags/>Tags</a></li><li class=menu-item><a class=menu-item-link href=/categories/>Categories</a></li></ul></nav></header><main id=main class=main><div class=content-wrapper><div id=content class=content><article class=post><header class=post-header><h1 class=post-title>Shell</h1><div class=post-meta><span class=post-time>2018-05-18</span><div class=post-category><a href=/categories/cs/>CS </a><a href=/categories/unix/>Unix</a></div></div></header><div class=post-toc id=post-toc><h2 class=post-toc-title>Contents</h2><div class="post-toc-content always-active"><nav id=TableOfContents><ul><li><ul><li><a href=#pipe>Pipe</a></li><li><a href=#xargs>Xargs</a></li><li><a href=#top>Top</a></li><li><a href=#strace>Strace</a></li><li><a href=#nohup>Nohup</a></li><li><a href=#ps>Ps</a></li><li><a href=#grep>Grep</a></li><li><a href=#netstat>Netstat</a></li><li><a href=#ss>Ss</a></li><li><a href=#ip>Ip</a></li><li><a href=#proc>Proc</a></li><li><a href=#awk>Awk</a></li><li><a href=#sed>Sed</a></li><li><a href=#reference>Reference</a></li></ul></li></ul></nav></div></div><div class=post-content><p>Learn a shell a day, master Unix one day!</p><h2 id=pipe>Pipe</h2><p>Process read previous process&rsquo;s output as its input and generate output to next process&rsquo;s input.
 Use symbol <code>|</code> to create a pipeline, which a powerful skill in Unix.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
 </span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>// count the numbers of text file in current directory.
@@ -65,7 +65,49 @@ kernel versions are shown first.</p><div class=highlight><div class=chroma><tabl
 </span><span class=lnt>2
 </span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>// count how many ESTABLISHED TCP v4 sockets
 </span></span><span class=line><span class=cl>netstat -altu4 | grep tcp |grep -i established | wc -l
-</span></span></code></pre></td></tr></table></div></div><h2 id=ss>Ss</h2><p>ss - another utility to investigate sockets</p><h2 id=proc>Proc</h2><p>proc - process information pseudo-filesystem</p><h2 id=awk>Awk</h2><p>mawk - pattern scanning and text processing language</p><h2 id=sed>Sed</h2><p>sed - stream editor for filtering and transforming text</p><p>Some tasks can be solved by using combination of a few shell.</p><ol><li></li></ol><h2 id=reference>Reference</h2></div><div class=post-copyright><p class=copyright-item><span class=item-title>Author</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=ss>Ss</h2><p>ss - another utility to investigate sockets</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>ss -t -a
+</span></span><span class=line><span class=cl>        Display all TCP sockets.
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>ss -t -a -Z
+</span></span><span class=line><span class=cl>        Display all TCP sockets with process SELinux security contexts.
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>ss -u -a
+</span></span><span class=line><span class=cl>        Display all UDP sockets.
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>ss -o state established &#39;( dport = :ssh or sport = :ssh )&#39;
+</span></span><span class=line><span class=cl>        Display all established ssh connections.
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>ss -x src /tmp/.X11-unix/*
+</span></span><span class=line><span class=cl>        Find all local processes connected to X server.
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>ss -o state fin-wait-1 &#39;( sport = :http or sport = :https )&#39; dst 193.233.7/24
+</span></span><span class=line><span class=cl>        List all the tcp sockets in state FIN-WAIT-1 for our apache to network 193.233.7/24 and look at their timers.
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>ss -a -A &#39;all,!tcp&#39;
+</span></span><span class=line><span class=cl>        List sockets in all states from all socket tables but TCP.
+</span></span></code></pre></td></tr></table></div></div><h2 id=ip>Ip</h2><p>ip - show / manipulate routing, network devices, interfaces and tunnels</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>ip addr      //Shows addresses assigned to all network interfaces.
+</span></span></code></pre></td></tr></table></div></div><h2 id=proc>Proc</h2><p>proc - process information pseudo-filesystem</p><p>The proc filesystem is a pseudo-filesystem which provides an interface to kernel data structures. It is commonly mounted at <code>/proc/[pid]</code></p><h2 id=awk>Awk</h2><p>mawk - pattern scanning and text processing language</p><h2 id=sed>Sed</h2><p>sed - stream editor for filtering and transforming text</p><p>Some tasks can be solved by using combination of a few shell.</p><ol><li></li></ol><h2 id=reference>Reference</h2></div><div class=post-copyright><p class=copyright-item><span class=item-title>Author</span>
 <span class=item-content>Paisen</span></p><p class=copyright-item><span class=item-title>LastMod</span>
 <span class=item-content>2018-05-18</span></p></div><footer class=post-footer><div class=post-tags><a href=/tags/shell/>Shell</a></div><nav class=post-nav><a class=prev href=/post/ab-test/><i class="iconfont icon-left"></i>
 <span class="prev-text nav-default">A tool for testing server</span>
