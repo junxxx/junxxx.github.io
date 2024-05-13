@@ -5,22 +5,21 @@ categories: ["Tech", "Tools"]
 tags: ["GDB"]
 author: "Paisen"
 ---
-This artice keep tracks of the most used commands of GDB
+This article keep tracks of the most used commands of GDB
 
-Write a classic C program.
+Write a classic C program with your favoriate editor and save it as `main.c`.
 ```c
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
     printf("Hello world\n");
 }
-
 ```
-Compiler
+Compile it with `gcc`, which is a popular c/c++ compiler on linux.
 ```shell
 gcc -o main -g main.c 
 ```
-Debug 
+Debug with `gdb`
 ```shell
 gdb main      // gdb programname -p [pid]
 ```

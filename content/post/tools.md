@@ -2,7 +2,7 @@
 title: "Build your own tools"
 date: 2019-04-22 
 categories: ["Tools"]
-tags: [""]
+tags: ["tool"]
 author: "Paisen"
 ---
 ## 背景
@@ -30,8 +30,20 @@ iterm2 vscode docker postman shadowsocks typora
 Mac版位于 ~/Library/Rime/
 ### 编辑器
 [Vim](https://github.com/vim/vim)
-### 开发环境
-[Docker](https://docs.docker.com/get-started/)
+### Develop Env
+Use [Docker](https://docs.docker.com/get-started/) to build different image to develop various projects
+```
+Python3 image
+```
+```
+PHP
+```
+```
+JavaScript
+```
+```
+Golang
+```
 
 [K8s](https://kubernetes.io/docs/home/)
 

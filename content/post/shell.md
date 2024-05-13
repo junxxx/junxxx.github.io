@@ -87,8 +87,40 @@ netstat -altu4 | grep tcp |grep -i established | wc -l
 ## Ss
 ss - another utility to investigate sockets
 
+```
+ss -t -a
+        Display all TCP sockets.
+
+ss -t -a -Z
+        Display all TCP sockets with process SELinux security contexts.
+
+ss -u -a
+        Display all UDP sockets.
+
+ss -o state established '( dport = :ssh or sport = :ssh )'
+        Display all established ssh connections.
+
+ss -x src /tmp/.X11-unix/*
+        Find all local processes connected to X server.
+
+ss -o state fin-wait-1 '( sport = :http or sport = :https )' dst 193.233.7/24
+        List all the tcp sockets in state FIN-WAIT-1 for our apache to network 193.233.7/24 and look at their timers.
+
+ss -a -A 'all,!tcp'
+        List sockets in all states from all socket tables but TCP.
+```
+
+## Ip
+ip - show / manipulate routing, network devices, interfaces and tunnels
+```
+ip addr      //Shows addresses assigned to all network interfaces.
+```
+
+
 ## Proc
 proc - process information pseudo-filesystem
+
+The  proc  filesystem  is  a  pseudo-filesystem  which provides an interface to kernel data structures.  It is commonly mounted at `/proc/[pid]` 
 
 ## Awk
 mawk - pattern scanning and text processing language
