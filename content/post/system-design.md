@@ -1,7 +1,7 @@
 ---
 title: "System Design"
 date: 2022-07-06T09:48:51+08:00
-draft: true
+draft: false
 categories: ["Tech", "CS"]
 tags: ["System design"]
 author: "Paisen"
@@ -34,6 +34,7 @@ Technical concepts
 ## Cache
 
 ## Indexing
+In order to improve the efficient to fetch a item from a large database, we use index.
 
 ## Replication
 

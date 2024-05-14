@@ -125,6 +125,11 @@ The  proc  filesystem  is  a  pseudo-filesystem  which provides an interface to 
 ## Awk
 mawk - pattern scanning and text processing language
 
+`mawk` is an interpreter for the **AWK Programming Language**.
+```
+ss -t | awk '{print $4}' | awk -F: '{print $1}'         // list current connceted tcp Local IP address
+```
+
 ## Sed
 sed - stream editor for filtering and transforming text
 

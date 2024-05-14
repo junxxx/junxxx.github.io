@@ -1,6 +1,6 @@
 ---
 title: "Gdb"
-date: 2024-05-09T15:24:58+08:00
+date: 2018-07-12T15:24:58+08:00
 categories: ["Tech", "Tools"]
 tags: ["GDB"]
 author: "Paisen"
