@@ -12,7 +12,7 @@ This article is a summary of the important concepts in a modern multi-users, tim
 
 Modern OS is getting more complex due to the development of hardware. More and more features are add to OS kernel. But the foundamental concepts are similar.
 
-Most of the OS are written in C, so in order to read OS source code well, you need to learn [C programming language]({{< ref "/c.md" >}}) first.
+Most of the OS are written in C, so in order to read OS source code well, you need to learn [C programming language]({{< ref "/c-programming-language.md" >}}) first.
 
 Keep in mind, from a programmer's perspective, an OS is an implementation of hardwares(CPU, devices). Most of the features, such as **paging**, **user mode**, **kernel mode** etc, are provided by CPU.
 

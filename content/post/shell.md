@@ -113,7 +113,8 @@ ss -a -A 'all,!tcp'
 ## Ip
 ip - show / manipulate routing, network devices, interfaces and tunnels
 ```
-ip addr      //Shows addresses assigned to all network interfaces.
+// Show localhost's private IP address
+ip addr show dev eth0 | grep inet | grep -v inet6 | awk '{print $2}' | awk -F'/' '{print $1}'
 ```
 
 
@@ -132,6 +133,11 @@ ss -t | awk '{print $4}' | awk -F: '{print $1}'         // list current conncete
 
 ## Sed
 sed - stream editor for filtering and transforming text
+
+sed [OPTION]... {script-only-if-no-other-script} [input-file]...
+```
+sed 's/old/new/' config.yml     // replace old to new in file config.yml
+```
 
 Some tasks can be solved by using combination of a few shell.
 
