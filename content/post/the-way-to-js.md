@@ -1,7 +1,7 @@
 ---
 title: "The Way to JS"
 date: 2024-06-12T23:16:53+08:00
-draft: true
+draft: false
 categories: ["Tech", "Programming Language"]
 tags: ["JS"]
 author: "Paisen"

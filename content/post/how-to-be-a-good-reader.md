@@ -1,7 +1,7 @@
 ---
 title: "How to Be a Good Reader"
 date: 2024-06-15T15:57:58+08:00
-draft: true
+draft: false
 categories: ["Tech", "Learning Skill"]
 tags: ["Reading"]
 author: "Paisen"
