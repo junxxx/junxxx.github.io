@@ -82,5 +82,9 @@ author: "Paisen"
 
 由于你已经有编程经验，可以将学习重点放在JavaScript独特的部分和实践项目上，以加速学习过程。
 
+## NodeJs
+包管理工具nvm
+`brew install nvm`
+
 ## Reference
 1. []()
