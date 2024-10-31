@@ -8,7 +8,7 @@ author: "Paisen"
 ---
 
 ## 前言
-本文记录“玩”[Vim](https://www.vim.org/)的经验，学习Vim是一件起步很困难的事，但是当你稍微熟悉它的操作模式之后，会对它爱不释手。
+本文记录“玩”[Vim](https://www.vim.org/)的经验，学习Vim是一件起步很困难的事，但是当你稍微熟悉它的操作模式之后， 会对它爱不释手。
 
 学习，或者换句话说，玩Vim，最重要的是实际上手去用，去玩，去实操。心态放平衡，不要想着一口气学完所有的技巧并掌握它，事实上，作为一款编辑器，只要它能满足你的实际需求就行，你平常用不到的那些高级特性，可以在你日后慢慢使用的过程中逐渐去尝试。
 
@@ -63,6 +63,8 @@ Visual mode
 
 `C-v` block visual
 
+**marks**
+
 
 ### 编写简单脚本
 
@@ -90,3 +92,24 @@ set shiftwidth=4
 ```
 
 一位程序员想要的理想文本编辑器，当然除了编辑文本之外，还要写代码相当顺手。
+
+## 学习
+### Window
+buffer, window, tab
+
+### Scroll
+`z + Enter` Move the current line to the top of the screen and scroll.
+
+`z + .` Move the current line to the middle of the scrrent and scroll.
+
+`z + -` Move …… bottom.
+
+### Tags
+### Marks
+### Copy text between vim and another application
+Select text in vim with visual mode, and use command `"+y` to yank selected text to system clipboard. 
+Now, you can paste text with system command `command + V` in MacOS.
+
+Use `"+p` to paste text in system clipboard into vim.
+
+
