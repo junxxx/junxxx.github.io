@@ -1,1 +1,29 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>log on Paisen - blog for thinking</title><link>https://www.paisen.site/tags/log/</link><description>Recent content in log on Paisen - blog for thinking</description><generator>Hugo -- gohugo.io</generator><language>en</language><lastBuildDate>Sun, 15 May 2022 21:48:33 +0800</lastBuildDate><atom:link href="https://www.paisen.site/tags/log/index.xml" rel="self" type="application/rss+xml"/><item><title>Install Snap on Centos7</title><link>https://www.paisen.site/post/install-snap/</link><pubDate>Sun, 15 May 2022 21:48:33 +0800</pubDate><guid>https://www.paisen.site/post/install-snap/</guid><description>问题 在Centos7系统上安装snap，遇到的问题记录 1 2 3 4 5 6 7 8 9 10 [centos@ip-172-26-6-67 ~]$ sudo snap install core error: system does not fully support snapd: cannot mount squashfs image using &amp;#34;squashfs&amp;#34;: ----- mount: wrong fs type, bad option, bad superblock on /dev/loop0, missing codepage or</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Log on Paisen - blog for thinking</title><link>https://www.paisen.site/tags/log/</link><description>Recent content in Log on Paisen - blog for thinking</description><generator>Hugo</generator><language>en</language><lastBuildDate>Sun, 15 May 2022 21:48:33 +0800</lastBuildDate><atom:link href="https://www.paisen.site/tags/log/index.xml" rel="self" type="application/rss+xml"/><item><title>Install Snap on Centos7</title><link>https://www.paisen.site/post/install-snap/</link><pubDate>Sun, 15 May 2022 21:48:33 +0800</pubDate><guid>https://www.paisen.site/post/install-snap/</guid><description>&lt;h2 id="问题"&gt;问题&lt;/h2&gt;
+&lt;p&gt;在Centos7系统上安装&lt;code&gt;snap&lt;/code&gt;，遇到的问题记录&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt; 1
+&lt;/span&gt;&lt;span class="lnt"&gt; 2
+&lt;/span&gt;&lt;span class="lnt"&gt; 3
+&lt;/span&gt;&lt;span class="lnt"&gt; 4
+&lt;/span&gt;&lt;span class="lnt"&gt; 5
+&lt;/span&gt;&lt;span class="lnt"&gt; 6
+&lt;/span&gt;&lt;span class="lnt"&gt; 7
+&lt;/span&gt;&lt;span class="lnt"&gt; 8
+&lt;/span&gt;&lt;span class="lnt"&gt; 9
+&lt;/span&gt;&lt;span class="lnt"&gt;10
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-fallback" data-lang="fallback"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;[centos@ip-172-26-6-67 ~]$ sudo snap install core
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;error: system does not fully support snapd: cannot mount squashfs image using &amp;#34;squashfs&amp;#34;: -----
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; mount: wrong fs type, bad option, bad superblock on /dev/loop0,
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; missing codepage or helper program, or other error
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; In some cases useful info is found in syslog - try
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; dmesg | tail or so.
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; -----
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;Google一圈之后，解决方案如下：&lt;/p&gt;</description></item></channel></rss>

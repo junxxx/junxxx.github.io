@@ -1,3 +1,25 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>System design on Paisen - blog for thinking</title><link>https://www.paisen.site/tags/system-design/</link><description>Recent content in System design on Paisen - blog for thinking</description><generator>Hugo -- gohugo.io</generator><language>en</language><lastBuildDate>Wed, 06 Jul 2022 09:48:51 +0800</lastBuildDate><atom:link href="https://www.paisen.site/tags/system-design/index.xml" rel="self" type="application/rss+xml"/><item><title>System Design</title><link>https://www.paisen.site/post/system-design/</link><pubDate>Wed, 06 Jul 2022 09:48:51 +0800</pubDate><guid>https://www.paisen.site/post/system-design/</guid><description>Technical concepts
-APIs Database(SQL vs NoSQL) Scaling CAP Theorem Web authentication and basic security Load balancers Caching Message queues Indexing Failover Replication Consistent hashing APIs RESTful RPC SQL vs NoSQL Scaling Cache Indexing In order to improve the efficient to fetch a item from a large database, we use index.
-Replication Consistent hashing</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>System Design on Paisen - blog for thinking</title><link>https://www.paisen.site/tags/system-design/</link><description>Recent content in System Design on Paisen - blog for thinking</description><generator>Hugo</generator><language>en</language><lastBuildDate>Wed, 06 Jul 2022 09:48:51 +0800</lastBuildDate><atom:link href="https://www.paisen.site/tags/system-design/index.xml" rel="self" type="application/rss+xml"/><item><title>System Design</title><link>https://www.paisen.site/post/system-design/</link><pubDate>Wed, 06 Jul 2022 09:48:51 +0800</pubDate><guid>https://www.paisen.site/post/system-design/</guid><description>&lt;p&gt;Technical concepts&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;input disabled="" type="checkbox"&gt; APIs&lt;/li&gt;
+&lt;li&gt;&lt;input disabled="" type="checkbox"&gt; Database(SQL vs NoSQL)&lt;/li&gt;
+&lt;li&gt;&lt;input disabled="" type="checkbox"&gt; Scaling&lt;/li&gt;
+&lt;li&gt;&lt;input disabled="" type="checkbox"&gt; CAP Theorem&lt;/li&gt;
+&lt;li&gt;&lt;input disabled="" type="checkbox"&gt; Web authentication and basic security&lt;/li&gt;
+&lt;li&gt;&lt;input disabled="" type="checkbox"&gt; Load balancers&lt;/li&gt;
+&lt;li&gt;&lt;input disabled="" type="checkbox"&gt; Caching&lt;/li&gt;
+&lt;li&gt;&lt;input disabled="" type="checkbox"&gt; Message queues&lt;/li&gt;
+&lt;li&gt;&lt;input disabled="" type="checkbox"&gt; Indexing&lt;/li&gt;
+&lt;li&gt;&lt;input disabled="" type="checkbox"&gt; Failover&lt;/li&gt;
+&lt;li&gt;&lt;input disabled="" type="checkbox"&gt; Replication&lt;/li&gt;
+&lt;li&gt;&lt;input disabled="" type="checkbox"&gt; Consistent hashing&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="apis"&gt;APIs&lt;/h2&gt;
+&lt;h3 id="restful"&gt;RESTful&lt;/h3&gt;
+&lt;h3 id="rpc"&gt;RPC&lt;/h3&gt;
+&lt;h2 id="sql-vs-nosql"&gt;SQL vs NoSQL&lt;/h2&gt;
+&lt;h2 id="scaling"&gt;Scaling&lt;/h2&gt;
+&lt;h2 id="cache"&gt;Cache&lt;/h2&gt;
+&lt;h2 id="indexing"&gt;Indexing&lt;/h2&gt;
+&lt;p&gt;In order to improve the efficient to fetch a item from a large database, we use index.&lt;/p&gt;
+&lt;h2 id="replication"&gt;Replication&lt;/h2&gt;
+&lt;h2 id="consistent-hashing"&gt;Consistent hashing&lt;/h2&gt;</description></item></channel></rss>

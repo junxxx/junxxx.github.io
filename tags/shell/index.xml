@@ -1,3 +1,16 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Shell on Paisen - blog for thinking</title><link>https://www.paisen.site/tags/shell/</link><description>Recent content in Shell on Paisen - blog for thinking</description><generator>Hugo -- gohugo.io</generator><language>en</language><lastBuildDate>Fri, 18 May 2018 10:46:56 +0800</lastBuildDate><atom:link href="https://www.paisen.site/tags/shell/index.xml" rel="self" type="application/rss+xml"/><item><title>Shell</title><link>https://www.paisen.site/post/shell/</link><pubDate>Fri, 18 May 2018 10:46:56 +0800</pubDate><guid>https://www.paisen.site/post/shell/</guid><description>Learn a shell a day, master Unix one day!
-Pipe Process read previous process&amp;rsquo;s output as its input and generate output to next process&amp;rsquo;s input. Use symbol | to create a pipeline, which a powerful skill in Unix.
-1 2 // count the numbers of text file in current directory. ls -la | grep *.txt | wc -l Xargs Many programs, takes its arguments from the command line (char *argv[]) but ignores standard input fd 0.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Shell on Paisen - blog for thinking</title><link>https://www.paisen.site/tags/shell/</link><description>Recent content in Shell on Paisen - blog for thinking</description><generator>Hugo</generator><language>en</language><lastBuildDate>Fri, 18 May 2018 10:46:56 +0800</lastBuildDate><atom:link href="https://www.paisen.site/tags/shell/index.xml" rel="self" type="application/rss+xml"/><item><title>Shell</title><link>https://www.paisen.site/post/shell/</link><pubDate>Fri, 18 May 2018 10:46:56 +0800</pubDate><guid>https://www.paisen.site/post/shell/</guid><description>&lt;p&gt;Learn a shell a day, master Unix one day!&lt;/p&gt;
+&lt;h2 id="pipe"&gt;Pipe&lt;/h2&gt;
+&lt;p&gt;Process read previous process&amp;rsquo;s output as its input and generate output to next process&amp;rsquo;s input.
+Use symbol &lt;code&gt;|&lt;/code&gt; to create a pipeline, which a powerful skill in Unix.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-fallback" data-lang="fallback"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;// count the numbers of text file in current directory.
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;ls -la | grep *.txt | wc -l
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h2 id="xargs"&gt;Xargs&lt;/h2&gt;
+&lt;p&gt;Many programs, takes its arguments from the command line (&lt;code&gt;char *argv[]&lt;/code&gt;) but ignores standard input &lt;code&gt;fd 0&lt;/code&gt;. If you want to pipe the output of a program to input of another program that ignores standard input, like &lt;code&gt;rm&lt;/code&gt;, you need to use &lt;code&gt;xargs&lt;/code&gt;.&lt;/p&gt;</description></item></channel></rss>
