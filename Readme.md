@@ -12,6 +12,11 @@ sudo apt-get install hugo
 brew install hugo
 ```
 
+## New post
+```
+hugo new post/file-name.md
+```
+
 ## Run on local
 ```
 git submodule update --init --recursive

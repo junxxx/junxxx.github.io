@@ -1,8 +1,8 @@
 ---
 title: "Install Docker on Win11"
 date: 2025-09-27T09:30:04+08:00
-categories: ["Tech", "Life", "Thought"]
-tags: [""]
+categories: ["Tech", "Docker", "Windows11"]
+tags: ["Docker"]
 author: "Paisen"
 ---
 
