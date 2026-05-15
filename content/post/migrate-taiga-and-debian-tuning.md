@@ -1,6 +1,6 @@
 ---
 title: "从 Win11 到 Debian 12：我的 Taiga 搬家与系统调优“避坑”指南"
-date: 2026-05-15T23:30:00+08:00
+date: 2026-05-14T23:30:00+08:00
 draft: false
 categories: ["Linux", "Docker"]
 tags: ["Debian", "Windows", "Taiga", "Migration"]
