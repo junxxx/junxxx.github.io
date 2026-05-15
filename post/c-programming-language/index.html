@@ -4,7 +4,7 @@ Primitive data types and sizes char, int, float, double
 signed, unsigned, short, long
 constant
 1 2 3 printf("%u\n", sizeof(int)); printf("%u\n", sizeof(char)); printf("%u\n", sizeof(float)); Array Array is a continuous fixed-length address. Different data types have different sizes. sizeof returns the size(how many bytes it holds to represent a data) of a data.
-'><meta name=keywords content="Hugo,theme,even"><meta name=generator content="Hugo 0.151.0 with theme even"><link rel=canonical href=https://www.paisen.site/post/c-programming-language/><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/manifest.json><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link href=/sass/main.min.af7fd1da18d66c2b017df5b4cae508ef44cfcac3fb4c7c7a327fe4f4f9e28b08.css rel=stylesheet><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin=anonymous><meta property="og:url" content="https://www.paisen.site/post/c-programming-language/"><meta property="og:site_name" content="Paisen - blog for thinking"><meta property="og:title" content="C Programming Language"><meta property="og:description" content='The C Programming Language is the best textbook for a beginner who wants to learn C. This article mostly talks about pointers and memory in C.
+'><meta name=keywords content="Hugo,theme,even"><meta name=generator content="Hugo 0.161.1 with theme even"><link rel=canonical href=https://www.paisen.site/post/c-programming-language/><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/manifest.json><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link href=/sass/main.min.af7fd1da18d66c2b017df5b4cae508ef44cfcac3fb4c7c7a327fe4f4f9e28b08.css rel=stylesheet><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin=anonymous><meta property="og:url" content="https://www.paisen.site/post/c-programming-language/"><meta property="og:site_name" content="Paisen - blog for thinking"><meta property="og:title" content="C Programming Language"><meta property="og:description" content='The C Programming Language is the best textbook for a beginner who wants to learn C. This article mostly talks about pointers and memory in C.
 C’s syntax is simple but handling pointers in C is too easy to get stuck.
 Primitive data types and sizes char, int, float, double
 signed, unsigned, short, long
@@ -31,7 +31,7 @@ constant
 </span><span class=lnt>2
 </span><span class=lnt>3
 </span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-C data-lang=C><span class=line><span class=cl><span class=c1>// declare an array
-</span></span></span><span class=line><span class=cl><span class=c1></span><span class=n>type</span> <span class=n>var</span><span class=p>[</span><span class=n>length</span><span class=p>];</span>
+</span></span></span><span class=line><span class=cl><span class=n>type</span> <span class=n>var</span><span class=p>[</span><span class=n>length</span><span class=p>];</span>
 </span></span><span class=line><span class=cl><span class=n>type</span> <span class=n>var</span><span class=p>[]</span> <span class=o>=</span> <span class=p>{};</span>
 </span></span></code></pre></td></tr></table></div></div><h3 id=buffer-overflow>Buffer overflow</h3><p>If you attemptes to write data beyond the bounds of array or buffer.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
@@ -48,7 +48,7 @@ constant
 </span><span class=lnt>9
 </span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-C data-lang=C><span class=line><span class=cl><span class=kt>char</span> <span class=n>name</span><span class=p>[</span><span class=mi>10</span><span class=p>]</span> <span class=o>=</span> <span class=p>{</span><span class=sc>&#39;P&#39;</span><span class=p>,</span> <span class=sc>&#39;a&#39;</span><span class=p>,</span> <span class=sc>&#39;i&#39;</span><span class=p>,</span> <span class=sc>&#39;S&#39;</span><span class=p>,</span> <span class=sc>&#39;e&#39;</span><span class=p>,</span> <span class=sc>&#39;n&#39;</span><span class=p>,</span> <span class=sc>&#39;\0&#39;</span><span class=p>};</span>
 </span></span><span class=line><span class=cl><span class=c1>//or
-</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kt>char</span> <span class=o>*</span><span class=n>name</span> <span class=o>=</span> <span class=s>&#34;PaiSen&#34;</span><span class=p>;</span>
+</span></span></span><span class=line><span class=cl><span class=kt>char</span> <span class=o>*</span><span class=n>name</span> <span class=o>=</span> <span class=s>&#34;PaiSen&#34;</span><span class=p>;</span>
 </span></span><span class=line><span class=cl><span class=nf>printf</span><span class=p>(</span><span class=s>&#34;name: %s</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>,</span> <span class=n>name</span><span class=p>);</span>
 </span></span><span class=line><span class=cl><span class=kt>char</span> <span class=o>*</span><span class=n>p</span> <span class=o>=</span> <span class=n>name</span><span class=p>;</span>
 </span></span><span class=line><span class=cl><span class=k>while</span><span class=p>(</span><span class=o>*</span><span class=n>p</span><span class=p>)</span> <span class=p>{</span>
@@ -69,8 +69,8 @@ constant
 </span><span class=lnt>10
 </span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-C data-lang=C><span class=line><span class=cl><span class=kt>int</span> <span class=n>number</span> <span class=o>=</span> <span class=mi>20</span><span class=p>;</span>
 </span></span><span class=line><span class=cl><span class=kt>int</span> <span class=o>*</span><span class=n>i</span><span class=p>;</span>         <span class=c1>// i is a pointer, which point to a integer variable
-</span></span></span><span class=line><span class=cl><span class=c1></span><span class=n>i</span> <span class=o>=</span> <span class=o>&amp;</span><span class=n>number</span><span class=p>;</span>    <span class=c1>// assign the address of number to pointer i
-</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kt>char</span> <span class=n>c</span> <span class=o>=</span> <span class=sc>&#39;H&#39;</span><span class=p>;</span>
+</span></span></span><span class=line><span class=cl><span class=n>i</span> <span class=o>=</span> <span class=o>&amp;</span><span class=n>number</span><span class=p>;</span>    <span class=c1>// assign the address of number to pointer i
+</span></span></span><span class=line><span class=cl><span class=kt>char</span> <span class=n>c</span> <span class=o>=</span> <span class=sc>&#39;H&#39;</span><span class=p>;</span>
 </span></span><span class=line><span class=cl><span class=kt>char</span> <span class=o>*</span><span class=n>cp</span> <span class=o>=</span> <span class=o>&amp;</span><span class=n>c</span><span class=p>;</span>
 </span></span><span class=line><span class=cl><span class=kt>void</span> <span class=o>*</span><span class=n>any</span><span class=p>;</span>
 </span></span><span class=line><span class=cl><span class=n>any</span> <span class=o>=</span> <span class=n>i</span><span class=p>;</span>
@@ -108,7 +108,7 @@ constant
 </span></span><span class=line><span class=cl>    <span class=nf>printf</span><span class=p>(</span><span class=s>&#34;%d</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>,</span> <span class=o>*</span><span class=p>(</span><span class=n>dynNumber</span><span class=o>+</span><span class=n>i</span><span class=p>));</span>
 </span></span><span class=line><span class=cl><span class=p>}</span>
 </span></span><span class=line><span class=cl><span class=c1>// don&#39;t forget to free dynNumber if you don&#39;t need it later.
-</span></span></span><span class=line><span class=cl><span class=c1></span><span class=nf>free</span><span class=p>(</span><span class=n>dynNumber</span><span class=p>);</span>
+</span></span></span><span class=line><span class=cl><span class=nf>free</span><span class=p>(</span><span class=n>dynNumber</span><span class=p>);</span>
 </span></span></code></pre></td></tr></table></div></div><h2 id=structs>Structs</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
 </span><span class=lnt>3
@@ -118,13 +118,13 @@ constant
 </span><span class=lnt>7
 </span><span class=lnt>8
 </span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-C data-lang=C><span class=line><span class=cl><span class=c1>// Mutual exclusion lock.
-</span></span></span><span class=line><span class=cl><span class=c1></span><span class=k>struct</span> <span class=n>spinlock</span> <span class=p>{</span>
+</span></span></span><span class=line><span class=cl><span class=k>struct</span> <span class=n>spinlock</span> <span class=p>{</span>
 </span></span><span class=line><span class=cl>  <span class=n>uint</span> <span class=n>locked</span><span class=p>;</span>       <span class=c1>// Is the lock held?
-</span></span></span><span class=line><span class=cl><span class=c1></span>
+</span></span></span><span class=line><span class=cl>
 </span></span><span class=line><span class=cl>  <span class=c1>// For debugging:
-</span></span></span><span class=line><span class=cl><span class=c1></span>  <span class=kt>char</span> <span class=o>*</span><span class=n>name</span><span class=p>;</span>        <span class=c1>// Name of lock.
-</span></span></span><span class=line><span class=cl><span class=c1></span>  <span class=k>struct</span> <span class=n>cpu</span> <span class=o>*</span><span class=n>cpu</span><span class=p>;</span>   <span class=c1>// The cpu holding the lock.
-</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>};</span>
+</span></span></span><span class=line><span class=cl>  <span class=kt>char</span> <span class=o>*</span><span class=n>name</span><span class=p>;</span>        <span class=c1>// Name of lock.
+</span></span></span><span class=line><span class=cl>  <span class=k>struct</span> <span class=n>cpu</span> <span class=o>*</span><span class=n>cpu</span><span class=p>;</span>   <span class=c1>// The cpu holding the lock.
+</span></span></span><span class=line><span class=cl><span class=p>};</span>
 </span></span></code></pre></td></tr></table></div></div><h2 id=library-and-system-call>Library and system call</h2><h2 id=reference>Reference</h2></div><div class=post-copyright><p class=copyright-item><span class=item-title>Author</span>
 <span class=item-content>Paisen</span></p><p class=copyright-item><span class=item-title>LastMod</span>
 <span class=item-content>2018-04-05</span></p></div><footer class=post-footer><div class=post-tags><a href=/tags/c/>C</a></div><nav class=post-nav><a class=prev href=/post/shell/><i class="iconfont icon-left"></i>
@@ -135,4 +135,4 @@ constant
 <a class=theme-link href=https://github.com/olOwOlo/hugo-theme-even>Even</a>
 </span><span class=copyright-year>&copy;
 2017 -
-2025<span class=heart><i class="iconfont icon-heart"></i></span><span></span></span></div></footer><div class=back-to-top id=back-to-top><i class="iconfont icon-up"></i></div></div><script src=https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin=anonymous></script><script type=text/javascript src=/js/main.min.4ae89da218555efa0e7093a20b92017d2e1202b66fff9fc2edf4cb8d44b44c6e.js></script></body></html>
+2026<span class=heart><i class="iconfont icon-heart"></i></span><span></span></span></div></footer><div class=back-to-top id=back-to-top><i class="iconfont icon-up"></i></div></div><script src=https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin=anonymous></script><script type=text/javascript src=/js/main.min.4ae89da218555efa0e7093a20b92017d2e1202b66fff9fc2edf4cb8d44b44c6e.js></script></body></html>
