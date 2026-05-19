@@ -25,10 +25,7 @@
 &lt;p&gt;In order to improve the efficient to fetch a item from a large database, we use index.&lt;/p&gt;
 &lt;h2 id="replication"&gt;Replication&lt;/h2&gt;
 &lt;h2 id="consistent-hashing"&gt;Consistent hashing&lt;/h2&gt;</description></item><item><title>A lecture of Go</title><link>https://www.paisen.site/post/go/</link><pubDate>Sun, 29 May 2022 15:27:24 +0800</pubDate><guid>https://www.paisen.site/post/go/</guid><description>&lt;h2 id="概述"&gt;概述&lt;/h2&gt;
-&lt;p&gt;串讲，是以会议形式，串讲人给同事讲一个topic。会上的其他同事，对串讲人进行相关知识的提问，以考查其对此topic的掌握程度。便于尽快上手，投入工作。&lt;/p&gt;</description></item><item><title>服务内容</title><link>https://www.paisen.site/post/intro/</link><pubDate>Sun, 29 May 2022 15:27:24 +0800</pubDate><guid>https://www.paisen.site/post/intro/</guid><description>&lt;p&gt;程序开发设计&lt;/p&gt;
-&lt;p&gt;专业团队&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;技术范围：PHP，Go，Python，C/C++，JavaScript等&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;服务内容：系统设计，网站建设，服务集群搭建，数据采集，Office办公自动化，大学生毕设，进大厂模拟面试&lt;/strong&gt;&lt;/p&gt;</description></item><item><title>Shell</title><link>https://www.paisen.site/post/shell/</link><pubDate>Fri, 18 May 2018 10:46:56 +0800</pubDate><guid>https://www.paisen.site/post/shell/</guid><description>&lt;p&gt;Learn a shell a day, master Unix one day!&lt;/p&gt;
+&lt;p&gt;串讲，是以会议形式，串讲人给同事讲一个topic。会上的其他同事，对串讲人进行相关知识的提问，以考查其对此topic的掌握程度。便于尽快上手，投入工作。&lt;/p&gt;</description></item><item><title>Shell</title><link>https://www.paisen.site/post/shell/</link><pubDate>Fri, 18 May 2018 10:46:56 +0800</pubDate><guid>https://www.paisen.site/post/shell/</guid><description>&lt;p&gt;Learn a shell a day, master Unix one day!&lt;/p&gt;
 &lt;h2 id="pipe"&gt;Pipe&lt;/h2&gt;
 &lt;p&gt;Process read previous process&amp;rsquo;s output as its input and generate output to next process&amp;rsquo;s input.
 Use symbol &lt;code&gt;|&lt;/code&gt; to create a pipeline, which a powerful skill in Unix.&lt;/p&gt;
