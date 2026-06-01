@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Database on Paisen - blog for thinking</title><link>https://www.paisen.site/tags/database/</link><description>Recent content in Database on Paisen - blog for thinking</description><generator>Hugo</generator><language>en</language><lastBuildDate>Mon, 01 Jun 2026 10:00:00 +0800</lastBuildDate><atom:link href="https://www.paisen.site/tags/database/index.xml" rel="self" type="application/rss+xml"/><item><title>PostgreSQL 性能优化实录：从 25MB/s 到 Docker 连通性“陷阱”</title><link>https://www.paisen.site/post/postgresql-optimization-docker-config/</link><pubDate>Mon, 01 Jun 2026 10:00:00 +0800</pubDate><guid>https://www.paisen.site/post/postgresql-optimization-docker-config/</guid><description>&lt;h2 id="背景高性能硬件下的低速尴尬"&gt;背景：高性能硬件下的低速尴尬&lt;/h2&gt;
+&lt;p&gt;在最近的一个项目中，我们部署了一套 PostgreSQL 17 数据库。硬件配置非常硬核：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;CPU&lt;/strong&gt;: 20 Cores&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Memory&lt;/strong&gt;: 32GB RAM&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Storage&lt;/strong&gt;: NVMe SSD&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;但在实际运行中，我们发现一个令人困惑的现象：在没有索引的情况下，全表扫描或复杂查询的 IO 吞吐量被死死限制在 &lt;strong&gt;25MB/s&lt;/strong&gt; 左右。对于 NVMe 硬盘和 20 核 CPU 来说，这显然远未达到硬件上限。&lt;/p&gt;</description></item></channel></rss>
