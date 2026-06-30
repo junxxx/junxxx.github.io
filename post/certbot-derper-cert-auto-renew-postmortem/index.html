@@ -1,0 +1,139 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge,chrome=1"><title>记一次 Certbot 证书自动续签失效与 Derper 崩溃循环的排查复盘 - Paisen - blog for thinking</title><meta name=renderer content="webkit"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta http-equiv=Cache-Control content="no-transform"><meta http-equiv=Cache-Control content="no-siteapp"><meta name=theme-color content="#f8f5ec"><meta name=msapplication-navbutton-color content="#f8f5ec"><meta name=apple-mobile-web-app-capable content="yes"><meta name=apple-mobile-web-app-status-bar-style content="#f8f5ec"><meta name=author content><meta name=description content="0. 背景 在 AWS Lightsail 上运行着一台 Debian 服务器（以下简称 laws），承载了两个关键服务：
+derper.paisen.site — 自建的 Tailscale DERP 中继节点，运行在 Docker 容器（fredliang/derper）中 bridge.paisen.site — 另一个业务服务，由 Nginx 托管 证书由 Certbot + Let&rsquo;s Encrypt 签发，并通过 cp 命令复制到 Docker 挂载目录 /etc/derp-certs/。
+"><meta name=keywords content="Hugo,theme,even"><meta name=generator content="Hugo 0.163.3 with theme even"><link rel=canonical href=https://www.paisen.site/post/certbot-derper-cert-auto-renew-postmortem/><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/manifest.json><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link href=/sass/main.min.af7fd1da18d66c2b017df5b4cae508ef44cfcac3fb4c7c7a327fe4f4f9e28b08.css rel=stylesheet><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin=anonymous><meta property="og:url" content="https://www.paisen.site/post/certbot-derper-cert-auto-renew-postmortem/"><meta property="og:site_name" content="Paisen - blog for thinking"><meta property="og:title" content="记一次 Certbot 证书自动续签失效与 Derper 崩溃循环的排查复盘"><meta property="og:description" content="0. 背景 在 AWS Lightsail 上运行着一台 Debian 服务器（以下简称 laws），承载了两个关键服务：
+derper.paisen.site — 自建的 Tailscale DERP 中继节点，运行在 Docker 容器（fredliang/derper）中 bridge.paisen.site — 另一个业务服务，由 Nginx 托管 证书由 Certbot + Let’s Encrypt 签发，并通过 cp 命令复制到 Docker 挂载目录 /etc/derp-certs/。"><meta property="og:locale" content="en"><meta property="og:type" content="article"><meta property="article:section" content="post"><meta property="article:published_time" content="2026-06-30T16:45:00+08:00"><meta property="article:modified_time" content="2026-06-30T16:45:00+08:00"><meta property="article:tag" content="Certbot"><meta property="article:tag" content="SSL"><meta property="article:tag" content="Docker"><meta property="article:tag" content="Nginx"><meta property="article:tag" content="Crontab"><meta property="article:tag" content="Tailscale"><meta itemprop=name content="记一次 Certbot 证书自动续签失效与 Derper 崩溃循环的排查复盘"><meta itemprop=description content="0. 背景 在 AWS Lightsail 上运行着一台 Debian 服务器（以下简称 laws），承载了两个关键服务：
+derper.paisen.site — 自建的 Tailscale DERP 中继节点，运行在 Docker 容器（fredliang/derper）中 bridge.paisen.site — 另一个业务服务，由 Nginx 托管 证书由 Certbot + Let’s Encrypt 签发，并通过 cp 命令复制到 Docker 挂载目录 /etc/derp-certs/。"><meta itemprop=datePublished content="2026-06-30T16:45:00+08:00"><meta itemprop=dateModified content="2026-06-30T16:45:00+08:00"><meta itemprop=wordCount content="1991"><meta itemprop=keywords content="Certbot,SSL,Docker,Nginx,Crontab,Tailscale,DERP,SRE"><meta name=twitter:card content="summary"><meta name=twitter:title content="记一次 Certbot 证书自动续签失效与 Derper 崩溃循环的排查复盘"><meta name=twitter:description content="0. 背景 在 AWS Lightsail 上运行着一台 Debian 服务器（以下简称 laws），承载了两个关键服务：
+derper.paisen.site — 自建的 Tailscale DERP 中继节点，运行在 Docker 容器（fredliang/derper）中 bridge.paisen.site — 另一个业务服务，由 Nginx 托管 证书由 Certbot + Let’s Encrypt 签发，并通过 cp 命令复制到 Docker 挂载目录 /etc/derp-certs/。"><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script><script src=https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js></script><![endif]--></head><body><div id=mobile-navbar class=mobile-navbar><div class=mobile-header-logo><a href=/ class=logo>Paisen</a></div><div class=mobile-navbar-icon><span></span>
+<span></span>
+<span></span></div></div><nav id=mobile-menu class="mobile-menu slideout-menu"><ul class=mobile-menu-list><a href=/><li class=mobile-menu-item>Home</li></a><a href=/post/><li class=mobile-menu-item>Archives</li></a><a href=/tags/><li class=mobile-menu-item>Tags</li></a><a href=/categories/><li class=mobile-menu-item>Categories</li></a></ul></nav><div class=container id=mobile-panel><header id=header class=header><div class=logo-wrapper><a href=/ class=logo>Paisen</a></div><nav class=site-navbar><ul id=menu class=menu><li class=menu-item><a class=menu-item-link href=/>Home</a></li><li class=menu-item><a class=menu-item-link href=/post/>Archives</a></li><li class=menu-item><a class=menu-item-link href=/tags/>Tags</a></li><li class=menu-item><a class=menu-item-link href=/categories/>Categories</a></li></ul></nav></header><main id=main class=main><div class=content-wrapper><div id=content class=content><article class=post><header class=post-header><h1 class=post-title>记一次 Certbot 证书自动续签失效与 Derper 崩溃循环的排查复盘</h1><div class=post-meta><span class=post-time>2026-06-30</span><div class=post-category><a href=/categories/ops/>Ops </a><a href=/categories/infra/>Infra</a></div><span class=more-meta>1991 words </span><span class=more-meta>4 mins read</span></div></header><div class=post-toc id=post-toc><h2 class=post-toc-title>Contents</h2><div class="post-toc-content always-active"><nav id=TableOfContents><ul><li><ul><li><a href=#0-背景>0. 背景</a></li><li><a href=#1-问题表现>1. 问题表现</a></li><li><a href=#2-原始-crontab-设计缺陷>2. 原始 Crontab 设计缺陷</a></li><li><a href=#3-排查过程>3. 排查过程</a><ul><li><a href=#31-确认证书文件状态>3.1 确认证书文件状态</a></li><li><a href=#32-分析-derper-崩溃日志>3.2 分析 Derper 崩溃日志</a></li><li><a href=#33-发现-bridgepaisensite-的独立问题>3.3 发现 bridge.paisen.site 的独立问题</a></li></ul></li><li><a href=#4-修复方案>4. 修复方案</a><ul><li><a href=#41-使用-certbot-deploy-hook核心修复>4.1 使用 Certbot Deploy Hook（核心修复）</a></li><li><a href=#42-简化-crontab>4.2 简化 Crontab</a></li><li><a href=#43-修复-bridgepaisensite-的认证器>4.3 修复 bridge.paisen.site 的认证器</a></li><li><a href=#44-手动同步当前证书应急修复>4.4 手动同步当前证书（应急修复）</a></li></ul></li><li><a href=#5-验证结果>5. 验证结果</a><ul><li><a href=#dry-run-全部通过>Dry-run 全部通过</a></li><li><a href=#外部-tls-验证>外部 TLS 验证</a></li></ul></li><li><a href=#6-涉及技术总结>6. 涉及技术总结</a></li><li><a href=#7-经验教训>7. 经验教训</a></li></ul></li></ul></nav></div></div><div class=post-content><h2 id=0-背景>0. 背景</h2><p>在 AWS Lightsail 上运行着一台 Debian 服务器（以下简称 <code>laws</code>），承载了两个关键服务：</p><ul><li><strong>derper.paisen.site</strong> — 自建的 Tailscale DERP 中继节点，运行在 Docker 容器（<code>fredliang/derper</code>）中</li><li><strong>bridge.paisen.site</strong> — 另一个业务服务，由 Nginx 托管</li></ul><p>证书由 Certbot + Let&rsquo;s Encrypt 签发，并通过 <code>cp</code> 命令复制到 Docker 挂载目录 <code>/etc/derp-certs/</code>。</p><p>某天发现 <code>https://derper.paisen.site</code> 显示不安全，Tailscale 客户端无法正常使用自建 DERP 节点，开始排查。</p><hr><h2 id=1-问题表现>1. 问题表现</h2><ul><li>浏览器访问 <code>https://derper.paisen.site</code> 提示证书错误</li><li><code>docker ps</code> 显示 derper 容器处于 <code>Restarting (1)</code> 崩溃循环</li><li>原有的 crontab 定时任务理论上应该每月 1 日自动续签并更新证书</li></ul><hr><h2 id=2-原始-crontab-设计缺陷>2. 原始 Crontab 设计缺陷</h2><p>查看原始 crontab：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl># 00:00 执行证书续签
+</span></span><span class=line><span class=cl>0 0 1 * * /usr/bin/certbot renew --force-renewal
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl># 00:30 复制证书到 Docker 目录并重启容器
+</span></span><span class=line><span class=cl>30 0 1 * * cp /etc/letsencrypt/live/derper.paisen.site/fullchain.pem /etc/derp-certs/derper.paisen.site.crt \
+</span></span><span class=line><span class=cl>  &amp;&amp; cp /etc/letsencrypt/live/derper.paisen.site/privkey.pem /etc/derp-certs/derper.paisen.site.key \
+</span></span><span class=line><span class=cl>  &amp;&amp; docker restart derper
+</span></span></code></pre></td></tr></table></div></div><p><strong>根本缺陷：竞态条件（Race Condition）</strong></p><p>两个 cron job 完全独立运行，第二条在 00:30 执行时，<strong>无法感知第一条是否已成功完成</strong>。若 certbot 续签耗时超过 30 分钟，或续签失败，<code>cp</code> 命令照样执行——复制的是过期或损坏的证书。</p><p>此外，两个 job 之间没有任何错误处理或日志输出，出现问题时完全无法溯源。</p><hr><h2 id=3-排查过程>3. 排查过程</h2><h3 id=31-确认证书文件状态>3.1 确认证书文件状态</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 检查 letsencrypt live 目录的证书有效期</span>
+</span></span><span class=line><span class=cl>sudo openssl x509 -in /etc/letsencrypt/live/derper.paisen.site/fullchain.pem -noout -dates
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 检查 Docker 挂载目录中的证书有效期</span>
+</span></span><span class=line><span class=cl>sudo openssl x509 -in /etc/derp-certs/derper.paisen.site.crt -noout -dates
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 对比两个文件是否一致</span>
+</span></span><span class=line><span class=cl>sudo diff /etc/letsencrypt/live/derper.paisen.site/fullchain.pem /etc/derp-certs/derper.paisen.site.crt
+</span></span></code></pre></td></tr></table></div></div><p>发现 Docker 目录中的 <code>.crt</code> 和 <code>live/</code> 下的证书不同——这是因为 <code>--force-renewal</code> 当天触发了<strong>两次</strong>（手动调试时多执行了一次），产生了两个不同的证书。</p><h3 id=32-分析-derper-崩溃日志>3.2 分析 Derper 崩溃日志</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>docker logs derper --tail <span class=m>20</span>
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>derper: can not start cert provider: can not load x509 key pair for hostname
+</span></span><span class=line><span class=cl>&#34;derper.paisen.site&#34;: tls: private key does not match public key
+</span></span></code></pre></td></tr></table></div></div><p><strong>问题清晰</strong>：<code>/etc/derp-certs/</code> 下的 <code>.crt</code> 和 <code>.key</code> 来自不同的续签批次，公钥与私钥不匹配，TLS 握手无法建立。</p><p>这是因为 <code>live/</code> 目录下使用的是<strong>软链接</strong>，指向 <code>/etc/letsencrypt/archive/</code> 中的实际文件。两次 <code>--force-renewal</code> 后，symlink 更新指向最新版本（<code>cert4.pem</code>, <code>privkey4.pem</code>），但此前 <code>cp</code> 只复制了部分文件，导致 <code>.crt</code> 和 <code>.key</code> 来自不同的版本。</p><h3 id=33-发现-bridgepaisensite-的独立问题>3.3 发现 bridge.paisen.site 的独立问题</h3><p>在执行 <code>certbot renew --dry-run</code> 验证时，发现第二个证书也在续签失败：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>Failed to renew certificate bridge.paisen.site with error: Could not bind TCP port 80
+</span></span><span class=line><span class=cl>because it is already in use by another process on this system (such as a web server).
+</span></span></code></pre></td></tr></table></div></div><p>检查端口占用：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>sudo ss -tlnp <span class=p>|</span> grep <span class=s1>&#39;:80 &#39;</span>
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>LISTEN  nginx  pid=669188
+</span></span></code></pre></td></tr></table></div></div><p>原来 <code>bridge.paisen.site</code> 的 certbot 配置使用的是 <code>standalone</code> 认证器——certbot 会自己在 80 端口起一个临时 HTTP 服务来完成 ACME 挑战，但 Nginx 已经占用了 80 端口，导致绑定失败。</p><p>查看续签配置：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>sudo cat /etc/letsencrypt/renewal/bridge.paisen.site.conf <span class=p>|</span> grep authenticator
+</span></span><span class=line><span class=cl><span class=c1># authenticator = standalone   ← 问题所在</span>
+</span></span></code></pre></td></tr></table></div></div><hr><h2 id=4-修复方案>4. 修复方案</h2><h3 id=41-使用-certbot-deploy-hook核心修复>4.1 使用 Certbot Deploy Hook（核心修复）</h3><p>Certbot 提供了官方的 hook 机制：将脚本放在 <code>/etc/letsencrypt/renewal-hooks/deploy/</code> 目录下，certbot 会在<strong>每次续签成功后</strong>自动执行这些脚本。</p><p>这彻底解决了竞态问题——复制和重启操作<strong>只在续签真正成功时</strong>才会发生。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>sudo tee /etc/letsencrypt/renewal-hooks/deploy/copy-to-derper.sh <span class=s>&lt;&lt; &#39;EOF&#39;
+</span></span></span><span class=line><span class=cl><span class=s>#!/bin/bash
+</span></span></span><span class=line><span class=cl><span class=s>set -e
+</span></span></span><span class=line><span class=cl><span class=s>cp /etc/letsencrypt/live/derper.paisen.site/fullchain.pem /etc/derp-certs/derper.paisen.site.crt
+</span></span></span><span class=line><span class=cl><span class=s>cp /etc/letsencrypt/live/derper.paisen.site/privkey.pem /etc/derp-certs/derper.paisen.site.key
+</span></span></span><span class=line><span class=cl><span class=s>docker restart derper
+</span></span></span><span class=line><span class=cl><span class=s>echo &#34;[$(date &#39;+%Y-%m-%d %H:%M:%S&#39;)] Cert copied and derper restarted successfully&#34; &gt;&gt; /var/log/certbot-renew.log
+</span></span></span><span class=line><span class=cl><span class=s>EOF</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/copy-to-derper.sh
+</span></span></code></pre></td></tr></table></div></div><p><strong>脚本中 <code>set -e</code> 的作用</strong>：任何一步失败（cp 失败、docker 重启失败）都会立即退出，不会执行后续操作，避免半成功状态。</p><h3 id=42-简化-crontab>4.2 简化 Crontab</h3><p>将原来两条有竞态的 job 合并为一条，并加上日志输出：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-gdscript3 data-lang=gdscript3><span class=line><span class=cl><span class=c1># 修复前（两条独立 job，有竞态）</span>
+</span></span><span class=line><span class=cl><span class=mi>0</span>  <span class=mi>0</span> <span class=mi>1</span> <span class=o>*</span> <span class=o>*</span> <span class=o>/</span><span class=n>usr</span><span class=o>/</span><span class=n>bin</span><span class=o>/</span><span class=n>certbot</span> <span class=n>renew</span> <span class=o>--</span><span class=n>force</span><span class=o>-</span><span class=n>renewal</span>
+</span></span><span class=line><span class=cl><span class=mi>30</span> <span class=mi>0</span> <span class=mi>1</span> <span class=o>*</span> <span class=o>*</span> <span class=n>cp</span> <span class=o>...</span> <span class=o>&amp;&amp;</span> <span class=n>cp</span> <span class=o>...</span> <span class=o>&amp;&amp;</span> <span class=n>docker</span> <span class=n>restart</span> <span class=n>derper</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 修复后（一条 job，deploy hook 接管后续动作）</span>
+</span></span><span class=line><span class=cl><span class=mi>0</span> <span class=mi>0</span> <span class=mi>1</span> <span class=o>*</span> <span class=o>*</span> <span class=o>/</span><span class=n>usr</span><span class=o>/</span><span class=n>bin</span><span class=o>/</span><span class=n>certbot</span> <span class=n>renew</span> <span class=o>--</span><span class=n>force</span><span class=o>-</span><span class=n>renewal</span> <span class=o>&gt;&gt;</span> <span class=o>/</span><span class=k>var</span><span class=o>/</span><span class=nb>log</span><span class=o>/</span><span class=n>certbot</span><span class=o>-</span><span class=n>renew</span><span class=o>.</span><span class=n>log</span> <span class=mi>2</span><span class=o>&gt;&amp;</span><span class=mi>1</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=43-修复-bridgepaisensite-的认证器>4.3 修复 bridge.paisen.site 的认证器</h3><p>将 <code>standalone</code> 改为 <code>nginx</code>，让 certbot 借助已运行的 Nginx 完成 ACME 挑战，无需占用 80 端口：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>sudo sed -i <span class=s1>&#39;s/authenticator = standalone/authenticator = nginx/&#39;</span> <span class=se>\
+</span></span></span><span class=line><span class=cl>  /etc/letsencrypt/renewal/bridge.paisen.site.conf
+</span></span></code></pre></td></tr></table></div></div><h3 id=44-手动同步当前证书应急修复>4.4 手动同步当前证书（应急修复）</h3><p>由于当天 force-renewal 跑了两次导致 <code>.crt</code> 和 <code>.key</code> 版本不一致，需要手动重新对齐：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>sudo cp /etc/letsencrypt/live/derper.paisen.site/fullchain.pem /etc/derp-certs/derper.paisen.site.crt
+</span></span><span class=line><span class=cl>sudo cp /etc/letsencrypt/live/derper.paisen.site/privkey.pem /etc/derp-certs/derper.paisen.site.key
+</span></span><span class=line><span class=cl>docker restart derper
+</span></span></code></pre></td></tr></table></div></div><p>验证公钥一致性：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 两者输出的 md5 应完全相同</span>
+</span></span><span class=line><span class=cl>sudo openssl x509 -in /etc/derp-certs/derper.paisen.site.crt -noout -pubkey <span class=p>|</span> md5sum
+</span></span><span class=line><span class=cl>sudo openssl pkey -in /etc/derp-certs/derper.paisen.site.key -pubout <span class=p>|</span> md5sum
+</span></span></code></pre></td></tr></table></div></div><hr><h2 id=5-验证结果>5. 验证结果</h2><h3 id=dry-run-全部通过>Dry-run 全部通过</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>sudo certbot renew --dry-run
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>Congratulations, all simulated renewals succeeded:
+</span></span><span class=line><span class=cl>  /etc/letsencrypt/live/bridge.paisen.site/fullchain.pem (success)
+</span></span><span class=line><span class=cl>  /etc/letsencrypt/live/derper.paisen.site/fullchain.pem (success)
+</span></span></code></pre></td></tr></table></div></div><h3 id=外部-tls-验证>外部 TLS 验证</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=nb>echo</span> <span class=p>|</span> openssl s_client -connect derper.paisen.site:443 -servername derper.paisen.site 2&gt;/dev/null <span class=se>\
+</span></span></span><span class=line><span class=cl>  <span class=p>|</span> openssl x509 -noout -dates -subject
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>notBefore=Jun 30 07:04:03 2026 GMT
+</span></span><span class=line><span class=cl>notAfter =Sep 28 07:04:02 2026 GMT
+</span></span><span class=line><span class=cl>subject  =CN=derper.paisen.site
+</span></span></code></pre></td></tr></table></div></div><p>证书有效，Derper 容器稳定运行。</p><hr><h2 id=6-涉及技术总结>6. 涉及技术总结</h2><table><thead><tr><th>技术</th><th>作用</th></tr></thead><tbody><tr><td><strong>Let&rsquo;s Encrypt / Certbot</strong></td><td>免费 TLS 证书签发与自动续签</td></tr><tr><td><strong>Certbot Deploy Hook</strong></td><td>续签成功后自动触发的脚本钩子，官方推荐的后处理方式</td></tr><tr><td><strong>ACME HTTP-01 Challenge</strong></td><td>Let&rsquo;s Encrypt 验证域名所有权的方式，需要 80 端口可达</td></tr><tr><td><strong>Certbot authenticator: nginx</strong></td><td>借用已运行的 Nginx 完成 ACME 挑战，无需独占 80 端口</td></tr><tr><td><strong>Certbot authenticator: standalone</strong></td><td>Certbot 自行监听 80 端口，与 Nginx 冲突</td></tr><tr><td><strong>TLS 公私钥匹配</strong></td><td><code>.crt</code>（公钥证书）与 <code>.key</code>（私钥）必须来自同一次签发，否则 TLS 握手失败</td></tr><tr><td><strong>Docker 挂载与证书更新</strong></td><td>使用 <code>cp</code> 而非软链接时，需要主动同步文件，容器内看不到宿主机 symlink 的更新</td></tr><tr><td><strong>Crontab 竞态条件</strong></td><td>多个独立 job 之间无依赖关系，时序无法保证，应用 <code>&&</code> 或外部 hook 串联</td></tr><tr><td><strong>Tailscale DERP</strong></td><td>Tailscale 的中继协议，用于穿透 NAT，自建节点需要有效的 TLS 证书</td></tr></tbody></table><hr><h2 id=7-经验教训>7. 经验教训</h2><ol><li><p><strong>不要用两条独立 cron job 模拟依赖关系</strong>。应该用 <code>&&</code> 串联，或使用工具原生提供的 hook 机制（如 certbot 的 <code>deploy-hooks</code>）。</p></li><li><p><strong><code>cp</code> 复制证书要保证原子性</strong>——cert 和 key 必须同一时刻从同一来源复制，分两步复制在并发场景下有风险。</p></li><li><p><strong><code>--force-renewal</code> 慎用</strong>。Let&rsquo;s Encrypt 有速率限制（每个域名每周最多 5 次），手动调试时反复执行容易产生多个版本的证书，引发版本混乱。正常情况下使用 <code>certbot renew</code>（只在距到期 30 天内才实际续签）即可。</p></li><li><p><strong>certbot authenticator 要与实际服务栈匹配</strong>。有 Nginx 就用 <code>nginx</code>，有 Apache 就用 <code>apache</code>，没有 Web 服务才考虑 <code>standalone</code>。</p></li></ol></div><div class=post-copyright><p class=copyright-item><span class=item-title>Author</span>
+<span class=item-content></span></p><p class=copyright-item><span class=item-title>LastMod</span>
+<span class=item-content>2026-06-30</span></p></div><footer class=post-footer><div class=post-tags><a href=/tags/certbot/>Certbot</a>
+<a href=/tags/ssl/>SSL</a>
+<a href=/tags/docker/>Docker</a>
+<a href=/tags/nginx/>Nginx</a>
+<a href=/tags/crontab/>Crontab</a>
+<a href=/tags/tailscale/>Tailscale</a>
+<a href=/tags/derp/>DERP</a>
+<a href=/tags/sre/>SRE</a></div><nav class=post-nav><a class=next href=/post/hugo-shortcodes-guide/><span class="next-text nav-default">Hugo Shortcodes: A Practical Guide</span>
+<span class="next-text nav-mobile">Next</span>
+<i class="iconfont icon-right"></i></a></nav></footer></article></div></div></main><footer id=footer class=footer><div class=social-links><a href=mailto:hprjunxxx@gmail.com class="iconfont icon-email" title=email></a><a href=https://stackoverflow.com/users/8432285/jun-pan class="iconfont icon-stack-overflow" title=stack-overflow></a><a href=https://twitter.com/Peter_pa_12 class="iconfont icon-twitter" title=twitter></a><a href=https://github.com/junxxx class="iconfont icon-github" title=github></a></div><div class=copyright><span class=power-by>Powered by <a class=hexo-link href=https://gohugo.io>Hugo</a>
+</span><span class=division>|</span>
+<span class=theme-info>Theme -
+<a class=theme-link href=https://github.com/olOwOlo/hugo-theme-even>Even</a>
+</span><span class=copyright-year>&copy;
+2017 -
+2026<span class=heart><i class="iconfont icon-heart"></i></span><span></span></span></div></footer><div class=back-to-top id=back-to-top><i class="iconfont icon-up"></i></div></div><script src=https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin=anonymous></script><script type=text/javascript src=/js/main.min.4ae89da218555efa0e7093a20b92017d2e1202b66fff9fc2edf4cb8d44b44c6e.js></script></body></html>

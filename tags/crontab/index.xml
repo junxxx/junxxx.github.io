@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Crontab on Paisen - blog for thinking</title><link>https://www.paisen.site/tags/crontab/</link><description>Recent content in Crontab on Paisen - blog for thinking</description><generator>Hugo</generator><language>en</language><lastBuildDate>Tue, 30 Jun 2026 16:45:00 +0800</lastBuildDate><atom:link href="https://www.paisen.site/tags/crontab/index.xml" rel="self" type="application/rss+xml"/><item><title>记一次 Certbot 证书自动续签失效与 Derper 崩溃循环的排查复盘</title><link>https://www.paisen.site/post/certbot-derper-cert-auto-renew-postmortem/</link><pubDate>Tue, 30 Jun 2026 16:45:00 +0800</pubDate><guid>https://www.paisen.site/post/certbot-derper-cert-auto-renew-postmortem/</guid><description>&lt;h2 id="0-背景"&gt;0. 背景&lt;/h2&gt;
+&lt;p&gt;在 AWS Lightsail 上运行着一台 Debian 服务器（以下简称 &lt;code&gt;laws&lt;/code&gt;），承载了两个关键服务：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;derper.paisen.site&lt;/strong&gt; — 自建的 Tailscale DERP 中继节点，运行在 Docker 容器（&lt;code&gt;fredliang/derper&lt;/code&gt;）中&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;bridge.paisen.site&lt;/strong&gt; — 另一个业务服务，由 Nginx 托管&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;证书由 Certbot + Let&amp;rsquo;s Encrypt 签发，并通过 &lt;code&gt;cp&lt;/code&gt; 命令复制到 Docker 挂载目录 &lt;code&gt;/etc/derp-certs/&lt;/code&gt;。&lt;/p&gt;</description></item></channel></rss>
