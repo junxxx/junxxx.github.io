@@ -6,3 +6,16 @@ node_modules/
 public/
 .deploy*/
 source/
+
+# 编辑器临时/备份文件
+*.swp
+*.swo
+*.un~
+*~
+
+# Hugo 生成物
+resources/_gen/
+.hugo_build.lock
+
+# 误建的软链接
+hugo_blog
