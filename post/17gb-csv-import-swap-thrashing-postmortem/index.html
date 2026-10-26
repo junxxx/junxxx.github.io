@@ -1,0 +1,271 @@
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge,chrome=1"><title>记一次 17GB CSV 导入打爆宿主机：从 SSH 失联到 swap 抖动的完整复盘 - Paisen - blog for thinking</title><meta name=renderer content="webkit"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta http-equiv=Cache-Control content="no-transform"><meta http-equiv=Cache-Control content="no-siteapp"><meta name=theme-color content="#f8f5ec"><meta name=msapplication-navbutton-color content="#f8f5ec"><meta name=apple-mobile-web-app-capable content="yes"><meta name=apple-mobile-web-app-status-bar-style content="#f8f5ec"><meta name=author content><meta name=description content="0. 背景 worker1 是一台放在办公室的 Lenovo ThinkCentre K70-05 台式机（i5-14500 / 30GB RAM / Debian 13），被当作内网服务器使用，上面同时运行着：
+SQL Server 2022（容器） ClickHouse（容器） PostGIS / PostgreSQL 17（容器） Java 业务服务（4GB 堆） Nginx + Python 后端（容器） 对外通过 frp 反向隧道暴露：aliyun:6000 → worker1:22（SSH）、8080、8100、15432、18123，另有一条 Tailscale 作为备用通道。
+"><meta name=keywords content="Hugo,博客,运维,数据库,后端架构,SRE,Linux"><meta name=generator content="Hugo 0.168.0 with theme even"><link rel=canonical href=https://www.paisen.site/post/17gb-csv-import-swap-thrashing-postmortem/><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/manifest.json><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link href=/sass/main.min.f92fd13721ddf72129410fd8250e73152cc6f2438082b6c0208dc24ee7c13fc4.css rel=stylesheet><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin=anonymous><meta property="og:url" content="https://www.paisen.site/post/17gb-csv-import-swap-thrashing-postmortem/"><meta property="og:site_name" content="Paisen - blog for thinking"><meta property="og:title" content="记一次 17GB CSV 导入打爆宿主机：从 SSH 失联到 swap 抖动的完整复盘"><meta property="og:description" content="0. 背景 worker1 是一台放在办公室的 Lenovo ThinkCentre K70-05 台式机（i5-14500 / 30GB RAM / Debian 13），被当作内网服务器使用，上面同时运行着：
+SQL Server 2022（容器） ClickHouse（容器） PostGIS / PostgreSQL 17（容器） Java 业务服务（4GB 堆） Nginx + Python 后端（容器） 对外通过 frp 反向隧道暴露：aliyun:6000 → worker1:22（SSH）、8080、8100、15432、18123，另有一条 Tailscale 作为备用通道。"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="post"><meta property="article:published_time" content="2026-10-26T10:50:00+08:00"><meta property="article:modified_time" content="2026-10-26T10:50:00+08:00"><meta property="article:tag" content="PostgreSQL"><meta property="article:tag" content="Pandas"><meta property="article:tag" content="Swap"><meta property="article:tag" content="OOM"><meta property="article:tag" content="FRP"><meta property="article:tag" content="Tailscale"><meta itemprop=name content="记一次 17GB CSV 导入打爆宿主机：从 SSH 失联到 swap 抖动的完整复盘"><meta itemprop=description content="0. 背景 worker1 是一台放在办公室的 Lenovo ThinkCentre K70-05 台式机（i5-14500 / 30GB RAM / Debian 13），被当作内网服务器使用，上面同时运行着：
+SQL Server 2022（容器） ClickHouse（容器） PostGIS / PostgreSQL 17（容器） Java 业务服务（4GB 堆） Nginx + Python 后端（容器） 对外通过 frp 反向隧道暴露：aliyun:6000 → worker1:22（SSH）、8080、8100、15432、18123，另有一条 Tailscale 作为备用通道。"><meta itemprop=datePublished content="2026-10-26T10:50:00+08:00"><meta itemprop=dateModified content="2026-10-26T10:50:00+08:00"><meta itemprop=wordCount content="5724"><meta itemprop=keywords content="PostgreSQL,Pandas,Swap,OOM,FRP,Tailscale,SRE,Post-Mortem"><meta name=twitter:card content="summary"><meta name=twitter:title content="记一次 17GB CSV 导入打爆宿主机：从 SSH 失联到 swap 抖动的完整复盘"><meta name=twitter:description content="0. 背景 worker1 是一台放在办公室的 Lenovo ThinkCentre K70-05 台式机（i5-14500 / 30GB RAM / Debian 13），被当作内网服务器使用，上面同时运行着：
+SQL Server 2022（容器） ClickHouse（容器） PostGIS / PostgreSQL 17（容器） Java 业务服务（4GB 堆） Nginx + Python 后端（容器） 对外通过 frp 反向隧道暴露：aliyun:6000 → worker1:22（SSH）、8080、8100、15432、18123，另有一条 Tailscale 作为备用通道。"><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script><script src=https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js></script><![endif]--></head><body><div id=mobile-navbar class=mobile-navbar><div class=mobile-header-logo><a href=/ class=logo>Paisen</a></div><div class=mobile-navbar-icon><span></span>
+<span></span>
+<span></span></div></div><nav id=mobile-menu class="mobile-menu slideout-menu"><ul class=mobile-menu-list><a href=/><li class=mobile-menu-item>Home</li></a><a href=/post/><li class=mobile-menu-item>Archives</li></a><a href=/tags/><li class=mobile-menu-item>Tags</li></a><a href=/categories/><li class=mobile-menu-item>Categories</li></a></ul></nav><div class=container id=mobile-panel><header id=header class=header><div class=logo-wrapper><a href=/ class=logo>Paisen</a></div><nav class=site-navbar><ul id=menu class=menu><li class=menu-item><a class=menu-item-link href=/>Home</a></li><li class=menu-item><a class=menu-item-link href=/post/>Archives</a></li><li class=menu-item><a class=menu-item-link href=/tags/>Tags</a></li><li class=menu-item><a class=menu-item-link href=/categories/>Categories</a></li></ul></nav></header><main id=main class=main><div class=content-wrapper><div id=content class=content><article class=post><header class=post-header><h1 class=post-title>记一次 17GB CSV 导入打爆宿主机：从 SSH 失联到 swap 抖动的完整复盘</h1><div class=post-meta><span class=post-time>2026-10-26</span><div class=post-category><a href=/categories/database/>Database </a><a href=/categories/ops/>Ops</a></div><span class=more-meta>约 5724 字 </span><span class=more-meta>预计阅读 12 分钟</span></div></header><div class=post-toc id=post-toc><h2 class=post-toc-title>文章目录</h2><div class="post-toc-content always-active"><nav id=TableOfContents><ul><li><ul><li><a href=#0-背景>0. 背景</a></li><li><a href=#1-问题表现>1. 问题表现</a></li><li><a href=#2-排查过程>2. 排查过程</a><ul><li><a href=#21-第一层先证明不是我的问题>2.1 第一层：先证明"不是我的问题"</a></li><li><a href=#22-第二层frps-侧没有-6000-的监听>2.2 第二层：frps 侧没有 6000 的监听</a></li><li><a href=#23-第三层整机还是单个服务>2.3 第三层：整机还是单个服务？</a></li><li><a href=#24-第四层机器恢复后的取证>2.4 第四层：机器恢复后的取证</a></li><li><a href=#25-找到真凶>2.5 找到真凶</a></li></ul></li><li><a href=#3-根因分析>3. 根因分析</a><ul><li><a href=#31-内存账这是一道算术题>3.1 内存账：这是一道算术题</a></li><li><a href=#32-为什么没有-oom-killerswap-抖动陷阱>3.2 为什么没有 OOM Killer？——Swap 抖动陷阱</a></li><li><a href=#33-完整因果链>3.3 完整因果链</a></li><li><a href=#34-磁盘不是原因>3.4 磁盘不是原因</a></li></ul></li><li><a href=#4-三个让排查跑偏的陷阱>4. 三个让排查跑偏的陷阱</a><ul><li><a href=#陷阱一本机-nc-的假阳性>陷阱一：本机 <code>nc</code> 的假阳性</a></li><li><a href=#陷阱二把ssh-连不上当成ssh-的问题>陷阱二：把"SSH 连不上"当成"SSH 的问题"</a></li><li><a href=#陷阱三把红灯当成电源故障>陷阱三：把"红灯"当成"电源故障"</a></li></ul></li><li><a href=#5-修复方案>5. 修复方案</a><ul><li><a href=#51-重写导入脚本全流式内存恒定>5.1 重写导入脚本：全流式，内存恒定</a></li><li><a href=#52-验证结果>5.2 验证结果</a></li><li><a href=#53-运维护栏>5.3 运维护栏</a></li></ul></li><li><a href=#6-涉及技术总结>6. 涉及技术总结</a></li><li><a href=#7-经验教训>7. 经验教训</a><ul><li><a href=#71-这是同一类事故的第二次>7.1 这是同一类事故的第二次</a></li><li><a href=#72-教训要变成机制而不是文档>7.2 教训要变成机制，而不是文档</a></li><li><a href=#73-监控的缺失比故障本身更严重>7.3 监控的缺失比故障本身更严重</a></li><li><a href=#74-一台桌面机不该承担这个负载>7.4 一台桌面机不该承担这个负载</a></li></ul></li><li><a href=#8-结语>8. 结语</a></li></ul></li></ul></nav></div></div><div class=post-content><h2 id=0-背景>0. 背景</h2><p><code>worker1</code> 是一台放在办公室的 Lenovo ThinkCentre K70-05 台式机（i5-14500 / 30GB RAM / Debian 13），被当作内网服务器使用，上面同时运行着：</p><ul><li>SQL Server 2022（容器）</li><li>ClickHouse（容器）</li><li>PostGIS / PostgreSQL 17（容器）</li><li>Java 业务服务（4GB 堆）</li><li>Nginx + Python 后端（容器）</li></ul><p>对外通过 <strong>frp 反向隧道</strong>暴露：<code>aliyun:6000 → worker1:22</code>（SSH）、<code>8080</code>、<code>8100</code>、<code>15432</code>、<code>18123</code>，另有一条 Tailscale 作为备用通道。</p><p>当天需要把一份季度 POI 数据（CSV，17GB）导入 PostgreSQL。仓库里已有现成的 <code>import_to_pg.py</code>，直接执行：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>python3 import_to_pg.py /data/tools/ko_poi_2026q3_release.csv --schema<span class=o>=</span><span class=s1>&#39;ko&#39;</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>十分钟后，整台机器失联。</strong></p><hr><h2 id=1-问题表现>1. 问题表现</h2><p>最初的现象非常"像网络问题"：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>$ ssh worker1
+</span></span><span class=line><span class=cl>kex_exchange_identification: Connection closed by remote host
+</span></span><span class=line><span class=cl>Connection closed by x.x.x.x port 6000
+</span></span></code></pre></td></tr></table></div></div><p>TCP 能连上，但服务端一个字节的 SSH banner 都不返回就断开。同一时间，同一台跳板机上的 <code>worker2</code>（6001）却完全正常。</p><p>完整时间线（事后从 frps / journald / PG 日志拼出来）：</p><table><thead><tr><th>时间</th><th>事件</th></tr></thead><tbody><tr><td>05-27 08:34</td><td>开机，<strong>连续运行 5 个月</strong></td></tr><tr><td>09:29:31</td><td>PG 正常 checkpoint</td></tr><tr><td>~09:30</td><td>执行 <code>python3 import_to_pg.py ...ko_poi_2026q3_release.csv</code></td></tr><tr><td><strong>09:37:08</strong></td><td>frpc 断开，SSH 失联</td></tr><tr><td>09:43:14</td><td>PG：<code>autovacuum worker took too long to start; canceled</code></td></tr><tr><td>09:44:32</td><td>frpc 重连（<strong>间隔 7 分 24 秒</strong>）</td></tr><tr><td>09:47:08</td><td>PG：<code>unexpected EOF on client connection with an open transaction</code></td></tr><tr><td>09:50:01</td><td>现场执行 <code>sudo iotop -o</code>（已在查 I/O）</td></tr><tr><td>09:55:14</td><td>frpc 再次断开</td></tr><tr><td>09:59–10:14</td><td>journald 反复报 <code>Under memory pressure, flushing caches</code></td></tr><tr><td>10:11–10:13</td><td>SQL Server：<code>Long Sync IO > 1000ms</code></td></tr><tr><td><strong>10:14:55</strong></td><td>日志戛然而止，<strong>无任何关机记录</strong></td></tr><tr><td>10:17:50</td><td>现场强制断电重启，服务恢复</td></tr></tbody></table><hr><h2 id=2-排查过程>2. 排查过程</h2><h3 id=21-第一层先证明不是我的问题>2.1 第一层：先证明"不是我的问题"</h3><p>第一反应是怀疑本地网络 / 出口 IP / 密钥。这里踩了一个<strong>很有价值的坑</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>$ nc -vz x.x.x.x 6000   → succeeded!
+</span></span><span class=line><span class=cl>$ nc -vz x.x.x.x 6999   → succeeded!   ← 这个端口根本不存在
+</span></span><span class=line><span class=cl>$ nc -vz x.x.x.x 6998   → succeeded!   ← 也不存在
+</span></span></code></pre></td></tr></table></div></div><p>本地 macOS 开着 <strong>Clash Verge 的 TUN 模式</strong>（fake-ip 网段 <code>198.18.0.0/15</code>），它会在本机直接应答 TCP 握手再丢弃，导致<strong>任何端口的连通性探测都返回"成功"</strong>。</p><blockquote><p>结论：排查内网/海外服务时，<strong>不要用本机 <code>nc</code> 判断端口是否可达</strong>。要么关掉 TUN，要么用一台第三方主机探测。</p></blockquote><p>改用一台干净的 Linux 主机复测，结论立刻清晰：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>port 6000: REFUSED      ← 没有进程监听
+</span></span><span class=line><span class=cl>port 6001: OPEN         ← worker2 正常
+</span></span><span class=line><span class=cl>port 7000: OPEN         ← frps 控制端口正常
+</span></span></code></pre></td></tr></table></div></div><p>同一套密钥能登录 <code>worker2</code>，说明 <strong>SSH 密钥、本地配置、出口 IP 全部没问题</strong>。</p><h3 id=22-第二层frps-侧没有-6000-的监听>2.2 第二层：frps 侧没有 6000 的监听</h3><p>frp 的 TCP 端口是<strong>动态创建</strong>的——只有 frpc 注册 proxy 成功，frps 才会去 listen。查看跳板机：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>ss -lntp <span class=p>|</span> grep -E <span class=s1>&#39;:600[01]&#39;</span>
+</span></span><span class=line><span class=cl><span class=c1># *:6001  users:((&#34;frps&#34;,...))    ← worker2 的</span>
+</span></span><span class=line><span class=cl><span class=c1># （6000 没有）</span>
+</span></span></code></pre></td></tr></table></div></div><p>再看 frps 日志，拿到了关键证据：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>2026-10-22 10:07:07 [I] client login info: ip [x.x.x.x] hostname [debian]
+</span></span><span class=line><span class=cl>2026-10-26 09:37:08 [I] client exit success
+</span></span><span class=line><span class=cl>2026-10-26 09:44:32 [I] client login info: ip [x.x.x.x] hostname [debian]
+</span></span><span class=line><span class=cl>2026-10-26 09:55:14 [I] client exit success
+</span></span></code></pre></td></tr></table></div></div><p><strong>第一条推论（后来被证明是整案的关键）：</strong></p><p><code>frpc.service</code> 配的是：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-ini data-lang=ini><span class=line><span class=cl><span class=k>[Service]</span>
+</span></span><span class=line><span class=cl><span class=na>Restart</span><span class=o>=</span><span class=s>always</span>
+</span></span><span class=line><span class=cl><span class=na>RestartSec</span><span class=o>=</span><span class=s>5s</span>
+</span></span></code></pre></td></tr></table></div></div><p>如果只是 frpc 崩溃或网络闪断，systemd <strong>5 秒内</strong>就会把它拉起来。但实际间隔是 <strong>7 分 24 秒</strong>。</p><blockquote><p>这说明那 7 分钟里 <strong>systemd 自己都跑不动</strong>——不是服务挂了，是<strong>整机卡死</strong>。</p></blockquote><h3 id=23-第三层整机还是单个服务>2.3 第三层：整机还是单个服务？</h3><p>三条独立证据同时指向"整机不在"：</p><ol><li>Tailscale 节点 <code>100.x.x.x</code> 同时离线，<code>tailscale ping</code> 全部超时</li><li>办公室出口公网 IP 的 22/80/443/7000 <strong>全部被过滤</strong></li><li>同一台跳板机上的 <code>worker2</code> 完全正常</li></ol><p><strong>注意：frpc 和 Tailscale 是两条完全独立的通道（一条自建 frp，一条 DERP 中继）。两条同时消失，只能是它们共同的载体——那台机器——出了问题。</strong></p><h3 id=24-第四层机器恢复后的取证>2.4 第四层：机器恢复后的取证</h3><p>现场强制断电重启后，机器回来了。此时立刻做只读取证：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>journalctl --list-boots <span class=p>|</span> tail -3
+</span></span><span class=line><span class=cl>last -x <span class=p>|</span> head -15
+</span></span><span class=line><span class=cl>journalctl -b -1 --no-pager <span class=p>|</span> tail -300
+</span></span><span class=line><span class=cl>journalctl -b -1 -k <span class=p>|</span> grep -iE <span class=s2>&#34;hung_task|blocked for more|I/O error|oom-kill|mce|thermal&#34;</span>
+</span></span></code></pre></td></tr></table></div></div><p>拿到的结论：</p><table><thead><tr><th>检查项</th><th>结果</th><th>含义</th></tr></thead><tbody><tr><td><code>last -x shutdown</code></td><td><strong>空</strong></td><td>没有干净关机 → 硬断电/整机锁死</td></tr><tr><td>内核 <code>hung_task</code></td><td>无</td><td>不是磁盘 I/O 挂死</td></tr><tr><td>内核 <code>oom-kill</code></td><td><strong>无</strong></td><td>没有触发 OOM Killer</td></tr><tr><td>内核 <code>MCE</code> / <code>panic</code> / <code>segfault</code></td><td>无</td><td>不是 CPU/内存硬件报错</td></tr><tr><td><code>nvme</code> / <code>ata</code> 错误</td><td>无</td><td>磁盘没有故障</td></tr><tr><td>上次 uptime</td><td>5 个月</td><td>不是长期累积的老问题</td></tr></tbody></table><p>但在这 40 分钟的窗口里，日志密度异常地高：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>09:59:13 systemd-journald[518]: Under memory pressure, flushing caches.
+</span></span><span class=line><span class=cl>10:00:34 systemd-journald[518]: Under memory pressure, flushing caches.
+</span></span><span class=line><span class=cl>10:00:50 tailscaled: subscriber for health.Change is slow (34.264196851s elapsed)
+</span></span><span class=line><span class=cl>10:00:50 tailscaled: monitor: time jump detected (slept 24s), probably wake from sleep
+</span></span><span class=line><span class=cl>10:00:46 pcp-pmie: Restart unresponsive PMDAs pmdaproc@debian pmdalinux@debian
+</span></span><span class=line><span class=cl>10:11:25 sqlservr: Long Sync IO: Scheduler 7 had 2 Sync IOs longer than 1000 ms
+</span></span><span class=line><span class=cl>10:14:55 systemd-journald[518]: Under memory pressure, flushing caches.   ← 最后一条
+</span></span></code></pre></td></tr></table></div></div><p><strong>关键读数：<code>subscriber is slow (34s elapsed)</code>。</strong></p><p>这是 tailscaled 内部的一个 goroutine 回调，正常应该在毫秒级完成。它花了 <strong>34 秒</strong>，意味着这个进程在 34 秒内根本没拿到 CPU 时间片。<strong>整机陷入了严重的调度饥饿。</strong></p><p>同时 <code>systemd-journald</code> 反复打印 <code>Under memory pressure</code>——这是 systemd 收到 cgroup v2 PSI（Pressure Stall Information）内存压力事件后的反应。<strong>内存压力是实锤。</strong></p><h3 id=25-找到真凶>2.5 找到真凶</h3><p>在现场遗留的 <code>~/.bash_history</code> 里找到了这条命令：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>python3 import_to_pg.py /data/tools/ko_poi_2026q3_release.csv --schema<span class=o>=</span><span class=s1>&#39;ko&#39;</span>
+</span></span></code></pre></td></tr></table></div></div><p>而脚本的核心只有两行：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=n>df</span> <span class=o>=</span> <span class=n>pd</span><span class=o>.</span><span class=n>read_csv</span><span class=p>(</span><span class=n>file_path</span><span class=p>,</span> <span class=n>encoding</span><span class=o>=</span><span class=n>encoding</span><span class=p>)</span>                      <span class=c1># 第 63 行</span>
+</span></span><span class=line><span class=cl><span class=n>df</span><span class=o>.</span><span class=n>to_sql</span><span class=p>(</span><span class=n>table_name</span><span class=p>,</span> <span class=n>engine</span><span class=p>,</span> <span class=n>schema</span><span class=o>=</span><span class=n>schema</span><span class=p>,</span> <span class=n>if_exists</span><span class=o>=</span><span class=s1>&#39;replace&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>          <span class=n>index</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>chunksize</span><span class=o>=</span><span class=mi>10000</span><span class=p>)</span>                             <span class=c1># 第 102 行</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong><code>pd.read_csv()</code> 没有 <code>chunksize</code> 参数 —— 它会把整个文件一次性读进内存。</strong></p><p>再看文件规模：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>$ ls -lh /data/tools/ko_poi_2026q3_release.csv
+</span></span><span class=line><span class=cl>-rw-rw-r-- <span class=m>1</span> blvh-worker blvh-worker 17G Oct <span class=m>24</span> 02:08 ko_poi_2026q3_release.csv
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>$ wc -l &lt; /data/tools/ko_poi_2026q3_release.csv
+</span></span><span class=line><span class=cl><span class=m>18013371</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>$ head -1 ... <span class=p>|</span> tr <span class=s1>&#39;,&#39;</span> <span class=s1>&#39;\n&#39;</span> <span class=p>|</span> wc -l
+</span></span><span class=line><span class=cl><span class=m>194</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>17 GB / 18,013,371 行 / 194 列。</strong></p><hr><h2 id=3-根因分析>3. 根因分析</h2><h3 id=31-内存账这是一道算术题>3.1 内存账：这是一道算术题</h3><p>pandas 用 <code>object</code> dtype 存字符串，每个单元格的代价是：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>一个指针（8 字节） + 一个 Python 字符串对象（约 50~60 字节）
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>仅指针：  18,013,371 × 194 × 8B            ≈  28 GB
+</span></span><span class=line><span class=cl>字符串：  非空单元格 × ~55B                 ≈  90~100 GB
+</span></span><span class=line><span class=cl>────────────────────────────────────────────────────
+</span></span><span class=line><span class=cl>实际需要：                                   ≈ 120 GB
+</span></span></code></pre></td></tr></table></div></div><p>而机器的实际预算是：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>物理内存 30 GB + Swap 31 GB = 61 GB
+</span></span></code></pre></td></tr></table></div></div><p><strong>差了整整一倍。这不是"可能爆"，是"必然爆"。</strong></p><h3 id=32-为什么没有-oom-killerswap-抖动陷阱>3.2 为什么没有 OOM Killer？——Swap 抖动陷阱</h3><p>这是整件事里最反直觉、也最值得记住的一点。</p><p>正常的 OOM 场景是：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>内存耗尽 → 内核 reclaim 失败 → OOM Killer 杀掉最占内存的进程 → 机器活着
+</span></span></code></pre></td></tr></table></div></div><p>但这次不一样，因为<strong>有 31 GB swap</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>内存耗尽 → 内核发现&#34;还有 31GB swap 可用&#34;
+</span></span><span class=line><span class=cl>        → 不杀进程，改去换页
+</span></span><span class=line><span class=cl>        → 换页量远超 swap 设备吞吐
+</span></span><span class=line><span class=cl>        → 每次缺页都要等一次磁盘随机 I/O
+</span></span><span class=line><span class=cl>        → CPU 全部时间耗在等待 I/O 上
+</span></span><span class=line><span class=cl>        → 系统失去响应（thrashing）
+</span></span></code></pre></td></tr></table></div></div><p>这个状态在教科书里叫 <strong>Thrashing（抖动）</strong>：系统看起来很忙（高负载、高 I/O），实际吞吐趋近于零。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>$ free -h
+</span></span><span class=line><span class=cl>               total   used   free   shared  buff/cache   available
+</span></span><span class=line><span class=cl>Mem:            30Gi   6.0Gi  20Gi   293Mi       5.2Gi        24Gi
+</span></span><span class=line><span class=cl>Swap:           31Gi     0B   31Gi
+</span></span></code></pre></td></tr></table></div></div><p>注意这是<strong>重启后</strong>的数据。事故发生时有 31GB swap 被疯狂换入换出，所以：</p><ul><li>磁盘利用率 100% → SQL Server 报 <code>Long Sync IO > 1000ms</code></li><li>CPU 时间全在 iowait → tailscaled 34 秒拿不到调度</li><li>网络软中断饿死 → frpc / Tailscale / cloudflared 同时掉线</li><li>日志写入被拖慢 → 但 journald 仍在每 30 秒挤出一条 <code>Under memory pressure</code></li></ul><blockquote><p><strong>结论：31GB swap 在这里不是保险，是陷阱。它把"一个进程被 OOM 杀掉"升级成了"整台机器假死"。</strong></p></blockquote><h3 id=33-完整因果链>3.3 完整因果链</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>pd.read_csv(17GB)
+</span></span><span class=line><span class=cl>        │
+</span></span><span class=line><span class=cl>        ├─→ 内存需求 120GB，物理 30GB
+</span></span><span class=line><span class=cl>        │
+</span></span><span class=line><span class=cl>        ├─→ 内核转向 swap（31GB，位于 NVMe）
+</span></span><span class=line><span class=cl>        │        │
+</span></span><span class=line><span class=cl>        │        ├─→ NVMe 随机 I/O 打满 → iowait 飙高
+</span></span><span class=line><span class=cl>        │        │        └─→ SQL Server: Long Sync IO &gt; 1000ms
+</span></span><span class=line><span class=cl>        │        │        └─→ PG: autovacuum worker took too long to start
+</span></span><span class=line><span class=cl>        │        │
+</span></span><span class=line><span class=cl>        │        ├─→ CPU 调度饥饿 → tailscaled subscriber slow (34s)
+</span></span><span class=line><span class=cl>        │        │
+</span></span><span class=line><span class=cl>        │        └─→ 网络软中断饿死 → frpc / Tailscale / cloudflared 全线掉线
+</span></span><span class=line><span class=cl>        │                 └─→ SSH 失联（kex_exchange_identification: closed）
+</span></span><span class=line><span class=cl>        │
+</span></span><span class=line><span class=cl>        └─→ 系统进入 Thrashing，持续 40 分钟无法自愈
+</span></span><span class=line><span class=cl>                 └─→ 现场强制断电
+</span></span></code></pre></td></tr></table></div></div><h3 id=34-磁盘不是原因>3.4 磁盘不是原因</h3><p>需要明确澄清：<strong>这次不是磁盘故障。</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>内核日志中：
+</span></span><span class=line><span class=cl>  ✗ 无 hung_task
+</span></span><span class=line><span class=cl>  ✗ 无 ata / nvme / ext4 错误
+</span></span><span class=line><span class=cl>  ✗ 无 I/O error
+</span></span><span class=line><span class=cl>  ✗ 无 reset / timeout
+</span></span></code></pre></td></tr></table></div></div><p>磁盘只是<strong>受害者</strong>——被 swap 拖到 100% 忙碌。现场看到的"电源红灯"，几乎可以确定是<strong>机箱前面板的硬盘活动指示灯</strong>：两块盘（<code>/data</code> 上的 HDD 在读 17GB CSV，NVMe 上的 swap 在疯狂换页）都处于满负荷，指示灯常亮不闪，看起来就像报警。</p><p><strong>这也解释了为什么一断电重启就好了</strong>——swap 清空、内存释放，一切恢复正常。如果是电源或主板真坏了，重启不可能这么干脆。</p><hr><h2 id=4-三个让排查跑偏的陷阱>4. 三个让排查跑偏的陷阱</h2><p>这次排查走了不少弯路，值得单独记下来。</p><h3 id=陷阱一本机-nc-的假阳性>陷阱一：本机 <code>nc</code> 的假阳性</h3><p>Clash Verge 的 TUN 模式会在本机代理 TCP 握手，导致<strong>所有端口探测都"成功"</strong>。这会让排查方向直接跑偏到"服务端防火墙/白名单"。</p><blockquote><p><strong>正确做法</strong>：用一台干净的第三方主机探测，或者临时关闭 TUN。</p></blockquote><h3 id=陷阱二把ssh-连不上当成ssh-的问题>陷阱二：把"SSH 连不上"当成"SSH 的问题"</h3><p><code>kex_exchange_identification: Connection closed</code> 看起来像 sshd 配置或密钥问题，但真相是：</p><ul><li>frps 上根本没有 6000 的监听（因为 frpc 掉线了）</li><li>所以连接在 TCP 层就被关闭，<strong>根本走不到认证阶段</strong></li></ul><blockquote><p><strong>正确做法</strong>：先看 <code>ss -lntp</code> 确认端口有没有监听，再谈认证。</p></blockquote><h3 id=陷阱三把红灯当成电源故障>陷阱三：把"红灯"当成"电源故障"</h3><p>红灯 + 瞬间死亡，第一反应一定是电源坏了。但结合"重启即恢复"和"零内核错误"，更合理的解释是<strong>硬盘活动灯常亮</strong>。</p><blockquote><p><strong>正确做法</strong>：区分"电源键指示灯"和"硬盘活动指示灯"，并观察风扇是否仍在转、按电源键是"一下关"还是"必须长按"。</p></blockquote><hr><h2 id=5-修复方案>5. 修复方案</h2><h3 id=51-重写导入脚本全流式内存恒定>5.1 重写导入脚本：全流式，内存恒定</h3><p>旧实现的根本问题是<strong>把文件大小当成了内存大小的下限</strong>。新实现改为全程流式：</p><table><thead><tr><th>环节</th><th>旧实现</th><th>新实现</th></tr></thead><tbody><tr><td>CSV 读取</td><td><code>pd.read_csv()</code> 全量载入</td><td><code>csv.reader</code> 逐行迭代</td></tr><tr><td>Excel 读取</td><td><code>pd.read_excel()</code> 全量载入</td><td><code>openpyxl(read_only=True)</code> 逐行迭代</td></tr><tr><td>写入方式</td><td><code>to_sql(chunksize=10000)</code> 逐批 INSERT</td><td><code>COPY FROM STDIN</code>（<code>copy_expert</code>）</td></tr><tr><td>内存占用</td><td>与文件大小成正比</td><td><strong>与文件大小无关</strong>，恒定几十 MB</td></tr><tr><td>类型处理</td><td>pandas 隐式推断</td><td>采样 2 万行显式推断，可 <code>--all-text</code> 关闭</td></tr></tbody></table><p>核心代码结构：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=c1># 1) 行迭代器（生成器，不缓存整表）</span>
+</span></span><span class=line><span class=cl><span class=n>header</span><span class=p>,</span> <span class=n>rows</span> <span class=o>=</span> <span class=n>iter_csv_rows</span><span class=p>(</span><span class=n>path</span><span class=p>,</span> <span class=n>encoding</span><span class=p>,</span> <span class=n>delimiter</span><span class=p>,</span> <span class=n>quotechar</span><span class=p>,</span> <span class=n>has_header</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 2) 采样推断类型（采样行回灌，不重复读文件）</span>
+</span></span><span class=line><span class=cl><span class=n>sample</span> <span class=o>=</span> <span class=nb>list</span><span class=p>(</span><span class=n>islice</span><span class=p>(</span><span class=n>rows</span><span class=p>,</span> <span class=n>SAMPLE_ROWS</span><span class=p>))</span>
+</span></span><span class=line><span class=cl><span class=n>types</span> <span class=o>=</span> <span class=n>infer_columns</span><span class=p>(</span><span class=n>sample</span><span class=p>,</span> <span class=n>ncols</span><span class=p>,</span> <span class=n>all_text</span><span class=o>=</span><span class=n>args</span><span class=o>.</span><span class=n>all_text</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=n>rows</span> <span class=o>=</span> <span class=n>chain</span><span class=p>(</span><span class=n>sample</span><span class=p>,</span> <span class=n>rows</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 3) 用 COPY 协议流式写入</span>
+</span></span><span class=line><span class=cl><span class=n>stream</span> <span class=o>=</span> <span class=n>ChunkStream</span><span class=p>(</span><span class=n>row_chunks</span><span class=p>(</span><span class=n>rows</span><span class=p>,</span> <span class=n>ncols</span><span class=p>))</span>
+</span></span><span class=line><span class=cl><span class=n>cur</span><span class=o>.</span><span class=n>copy_expert</span><span class=p>(</span><span class=s2>&#34;COPY schema.tbl (...) FROM STDIN WITH (FORMAT csv, NULL &#39;&#39;)&#34;</span><span class=p>,</span> <span class=n>stream</span><span class=p>)</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=52-验证结果>5.2 验证结果</h3><p>用一份 273MB / 150 万行 / 20 列的数据实测：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>[完成] tmp_import_test.big
+</span></span><span class=line><span class=cl>  行数   : 1,500,000
+</span></span><span class=line><span class=cl>  表大小 : 316 MB
+</span></span><span class=line><span class=cl>  耗时   : 7.0s  (215,615 行/秒)
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>[测量] 峰值内存 RSS = 68.1 MB
+</span></span></code></pre></td></tr></table></div></div><p><strong>峰值内存 68 MB，与文件大小无关。</strong> 按同样吞吐推算，1800 万行约需 90 秒的 COPY 时间（实际瓶颈会落在从机械盘读取 17GB 上）。</p><p>功能验证覆盖：</p><ul><li>CSV（UTF-8 / GBK / BOM 自动探测）</li><li>Excel（<code>.xlsx</code>，指定 sheet，中文列名）</li><li>含逗号、引号、换行的字段</li><li>空值 → NULL</li><li>类型推断：bigint / double precision / date / timestamp / boolean / text</li><li><code>--if-exists {replace,append,truncate,fail}</code></li><li><code>--limit</code>（试跑）、<code>--dry-run</code>（只看建表语句）、<code>--all-text</code>（跳过推断）</li></ul><h3 id=53-运维护栏>5.3 运维护栏</h3><p>代码修好只是第一步，还要有系统性防护：</p><p><strong>1）导入前关闭 swap</strong>——让内核在内存爆时只杀那一个进程：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>sudo swapoff -a
+</span></span><span class=line><span class=cl><span class=c1># 导入完成后再 sudo swapon -a</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>2）给导入进程加内存上限</strong>（双保险）：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>systemd-run --scope -p <span class=nv>MemoryMax</span><span class=o>=</span>8G -p <span class=nv>MemorySwapMax</span><span class=o>=</span>2G <span class=se>\
+</span></span></span><span class=line><span class=cl>  python3 import_to_pg.py big.csv --schema ko
+</span></span></code></pre></td></tr></table></div></div><p><strong>3）PG 参数回调</strong>（30GB 机器跑 5 个容器，原配置偏激进）：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-ini data-lang=ini><span class=line><span class=cl><span class=na>shared_buffers</span>        <span class=o>=</span> <span class=s>8GB  → 4GB</span>
+</span></span><span class=line><span class=cl><span class=na>maintenance_work_mem</span>  <span class=o>=</span> <span class=s>4GB  → 2GB</span>
+</span></span><span class=line><span class=cl><span class=na>max_wal_size</span>          <span class=o>=</span> <span class=s>16GB → 8GB</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>4）大文件导入规范</strong>（写进团队 checklist）：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>文件 &gt; 1GB   → 必须使用流式导入，禁止 pd.read_csv / pd.read_excel 全量读取
+</span></span><span class=line><span class=cl>文件 &gt; 10GB  → 必须使用 COPY，禁止 to_sql；导入前关 swap + 设内存上限
+</span></span><span class=line><span class=cl>任何导入     → 先 --limit 100000 试跑，再全量
+</span></span></code></pre></td></tr></table></div></div><hr><h2 id=6-涉及技术总结>6. 涉及技术总结</h2><table><thead><tr><th>技术 / 概念</th><th>作用与本次教训</th></tr></thead><tbody><tr><td><strong><code>pd.read_csv()</code></strong></td><td>无 <code>chunksize</code> 时全量载入内存，内存占用可达文件大小的 5~10 倍</td></tr><tr><td><strong><code>DataFrame.to_sql()</code></strong></td><td>底层是逐批 INSERT，远慢于 COPY，且会产生海量 WAL</td></tr><tr><td><strong>PostgreSQL <code>COPY</code></strong></td><td>服务端批量导入协议，吞吐比 INSERT 高一个数量级，内存恒定</td></tr><tr><td><strong><code>openpyxl(read_only=True)</code></strong></td><td>Excel 的流式读取模式，不把整张表加载进内存</td></tr><tr><td><strong>Thrashing（抖动）</strong></td><td>内存不足但仍有 swap 时，内核不杀进程而是疯狂换页，导致整机假死</td></tr><tr><td><strong>Swap 的双面性</strong></td><td>适量 swap 可防止偶发 OOM；过量 swap 会把"进程崩溃"升级成"整机雪崩"</td></tr><tr><td><strong>PSI（Pressure Stall Information）</strong></td><td>cgroup v2 的内存/IO 压力指标，<code>journald: Under memory pressure</code> 即来源于此</td></tr><tr><td><strong>frp 动态端口</strong></td><td>TCP 端口由 frpc 注册后才创建，客户端掉线则监听消失</td></tr><tr><td><strong><code>Restart=always</code> + <code>RestartSec=5s</code></strong></td><td>可用作"整机是否卡死"的探针：服务未在预期时间内重启，说明 systemd 本身被饿死</td></tr><tr><td><strong><code>kex_exchange_identification</code></strong></td><td>SSH 在密钥交换前被断开，说明问题在传输层，不在认证层</td></tr><tr><td><strong>TUN 模式代理</strong></td><td>会在本机伪造 TCP 握手，导致端口探测出现假阳性</td></tr><tr><td><strong><code>last -x</code> / <code>wtmp</code></strong></td><td>无 shutdown 记录 = 非正常关机（硬断电或整机锁死）</td></tr></tbody></table><hr><h2 id=7-经验教训>7. 经验教训</h2><h3 id=71-这是同一类事故的第二次>7.1 这是同一类事故的第二次</h3><p>翻仓库可以发现，2026 年 5 月已经写过一篇几乎同构的复盘：<a href=/post/sql-server-sync-crash-post-mortem/>记一次大数据量同步导致的 SQL Server 崩溃与全线服务掉线复盘</a>。</p><p>那次是 <strong>PostgreSQL → SQL Server</strong> 的同步脚本，这次是 <strong>CSV → PostgreSQL</strong> 的导入脚本；那次用 <code>read_sql_query</code> + <code>to_sql</code>，这次用 <code>read_csv</code> + <code>to_sql</code>。</p><p><strong>同一个根因，换了个方向，又发生了一次。</strong></p><p>上次复盘里其实已经写下结论：</p><blockquote><p>对于 10GB 以上的表，应优先考虑 <code>BCP</code> 或 <code>BULK INSERT</code>，而不是通过 Pandas 中转。</p></blockquote><p>但这条结论<strong>只停留在文档里，没有落到代码上</strong>。<code>import_to_pg.py</code> 依然是 pandas 全量读取。</p><h3 id=72-教训要变成机制而不是文档>7.2 教训要变成机制，而不是文档</h3><p>这次之后必须做到：</p><ol><li><strong>危险 API 加拦截</strong>：在公共工具库中封装 <code>safe_read_csv()</code>，超过阈值直接拒绝全量读取</li><li><strong>代码 review checklist</strong>：出现 <code>read_csv</code> / <code>read_excel</code> / <code>to_sql</code> 必须说明数据规模</li><li><strong>默认参数要安全</strong>：<code>import_to_pg.py</code> 默认就是流式，不存在"忘记加 chunksize"的可能</li><li><strong>先小后大</strong>：任何导入先 <code>--limit 100000</code> 试跑</li></ol><h3 id=73-监控的缺失比故障本身更严重>7.3 监控的缺失比故障本身更严重</h3><p>从 09:37 失联到 10:17 恢复，<strong>整整 40 分钟没有任何告警</strong>。发现故障完全依赖"人想登录时登不上"。</p><p>必须补上：</p><ul><li>外部探测 6000 端口（从独立机器，不经过本机代理）</li><li>内存 / swap / iowait 告警（<code>%iowait > 20%</code> 持续 1 分钟即告警）</li><li><code>frpc</code> 心跳超时告警</li></ul><h3 id=74-一台桌面机不该承担这个负载>7.4 一台桌面机不该承担这个负载</h3><p>需要正视的现实：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>Lenovo ThinkCentre K70-05（办公台式机）
+</span></span><span class=line><span class=cl>├── i5-14500 / 30GB RAM
+</span></span><span class=line><span class=cl>├── 同时跑 MSSQL + ClickHouse + PostGIS + Java(4G堆) + Nginx + Python
+</span></span><span class=line><span class=cl>├── /data 是 5400 转 SMR 机械盘
+</span></span><span class=line><span class=cl>└── 还挂着 WiFi（日志里全是扫描超时和 MAC 随机化）
+</span></span></code></pre></td></tr></table></div></div><p>这不是"配置调优"能解决的问题，是<strong>硬件选型与业务负载不匹配</strong>。中期应该：</p><ul><li>ETL 数据目录迁到 SSD（SMR 机械盘做批量写入是灾难）</li><li>SQL Server 设置 <code>memory.memorylimitmb</code></li><li>Java 堆从 4GB 降到 2GB</li><li>关闭 WiFi，只用有线</li></ul><hr><h2 id=8-结语>8. 结语</h2><p>这次故障的排查过程，本质上是一个<strong>不断修正错误假设</strong>的过程：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>&#34;是不是我本地 IP 变了被白名单拦了？&#34;   → 不是，回环也 refused
+</span></span><span class=line><span class=cl>&#34;是不是 SSH 配置/密钥坏了？&#34;           → 不是，worker2 同密钥正常
+</span></span><span class=line><span class=cl>&#34;是不是磁盘坏了？&#34;                     → 不是，内核零 I/O 错误
+</span></span><span class=line><span class=cl>&#34;是不是电源坏了？&#34;                     → 不是，重启即恢复
+</span></span><span class=line><span class=cl>&#34;是不是 frpc 挂了？&#34;                   → 不是，RestartSec=5s 却断了 7 分钟
+</span></span><span class=line><span class=cl>                                            ↑ 这一条才是整案的转折点
+</span></span></code></pre></td></tr></table></div></div><p><strong>最有价值的一条线索，不是任何一个报错，而是一个"不符合预期的时间差"</strong>：配置了 5 秒自动重启的服务，隔了 7 分 24 秒才回来。</p><p>当系统的行为与配置承诺不符时，说明故障发生在比配置更底层的地方。</p><p>而最讽刺的是：整台机器的崩塌，起因只是一行看起来很正常的 <code>pd.read_csv()</code>。</p></div><div class=post-copyright><p class=copyright-item><span class=item-title>文章作者</span>
+<span class=item-content></span></p><p class=copyright-item><span class=item-title>上次更新</span>
+<span class=item-content>2026-10-26</span></p></div><footer class=post-footer><div class=post-tags><a href=/tags/postgresql/>PostgreSQL</a>
+<a href=/tags/pandas/>Pandas</a>
+<a href=/tags/swap/>Swap</a>
+<a href=/tags/oom/>OOM</a>
+<a href=/tags/frp/>FRP</a>
+<a href=/tags/tailscale/>Tailscale</a>
+<a href=/tags/sre/>SRE</a>
+<a href=/tags/post-mortem/>Post-mortem</a></div><nav class=post-nav><a class=next href=/post/certbot-derper-cert-auto-renew-postmortem/><span class="next-text nav-default">记一次 Certbot 证书自动续签失效与 Derper 崩溃循环的排查复盘</span>
+<span class="next-text nav-mobile">下一篇</span>
+<i class="iconfont icon-right"></i></a></nav></footer></article></div></div></main><footer id=footer class=footer><div class=footer-links><a href=/about/>关于</a>
+<span class=division>|</span>
+<a href=/contact/>联系</a>
+<span class=division>|</span>
+<a href=/privacy/>隐私政策</a></div><div class=social-links><a href=mailto:hprjunxxx@gmail.com class="iconfont icon-email" title=email></a><a href=https://stackoverflow.com/users/8432285/jun-pan class="iconfont icon-stack-overflow" title=stack-overflow></a><a href=https://twitter.com/Peter_pa_12 class="iconfont icon-twitter" title=twitter></a><a href=https://github.com/junxxx class="iconfont icon-github" title=github></a></div><div class=copyright><span class=power-by>由 <a class=hexo-link href=https://gohugo.io>Hugo</a> 强力驱动
+</span><span class=division>|</span>
+<span class=theme-info>主题 -
+<a class=theme-link href=https://github.com/olOwOlo/hugo-theme-even>Even</a>
+</span><span class=copyright-year>&copy;
+2017 -
+2026<span class=heart><i class="iconfont icon-heart"></i></span><span></span></span></div></footer><div class=back-to-top id=back-to-top><i class="iconfont icon-up"></i></div></div><script src=https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin=anonymous></script><script type=text/javascript src=/js/main.min.4ae89da218555efa0e7093a20b92017d2e1202b66fff9fc2edf4cb8d44b44c6e.js></script></body></html>
